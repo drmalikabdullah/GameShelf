@@ -1,0 +1,52 @@
+# Personal data - never commit
+backend/games.db
+backend/steamgriddb_key.txt
+
+# Downloaded cover art
+backend/covers/
+backend/heroes/
+backend/screenshots/
+
+# Frontend dependencies
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+
+# Build outputs
+frontend/dist/
+frontend/dist-ssr/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# OS
+.DS_Store
+Thumbs.db
