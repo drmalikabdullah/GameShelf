@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mmaphysicist's Steam Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-brand">The Shelf</div>
+    <a href="/">GOG Shelf</a>
+    <a href="/steam" class="active">Steam Shelf</a>
+    <a href="/ps3">PS3 Shelf</a>
+    <a href="/ps4">PS4 Shelf</a>
+    <div class="sidebar-divider"></div>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/settings">⚙ Settings</a>
+  </nav>
+
+  <div class="content">
+    <header>
+      <div class="title-row">
+        <h1>Mmaphysicist's Steam <span>Collection</span></h1>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="summary-bar" id="summaryBar"></div>
+      <div class="controls">
+        <input type="search" id="search" placeholder="Search your library…">
+        <div class="tabs" id="statusTabs">
+          <div class="tab active" data-status="all">All</div>
+          <div class="tab" data-status="backlog">Backlog</div>
+          <div class="tab" data-status="playing">Playing</div>
+          <div class="tab" data-status="completed">Completed</div>
+          <div class="tab" data-status="abandoned">Abandoned</div>
+        </div>
+        <select id="sort">
+          <option value="title">Sort: Title</option>
+          <option value="size">Sort: Size</option>
+          <option value="rating">Sort: Rating</option>
+          <option value="added">Sort: Recently Added</option>
+          <option value="missing">Missing Folder Only</option>
+        </select>
+        <button class="close-btn" id="addGameBtn">+ Add Game</button>
+        <button class="close-btn" id="trashBtn">🗑 Trash</button>
+        <button class="close-btn" id="searchAllBtn">🔎 Search All Shelves</button>
+        <button class="close-btn" id="bigPictureBtn">🎮 Big Picture</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="emptyMsg" style="display:none;">No games match that search</div>
+    </main>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="bp-overlay" id="bpOverlay">
+  <div class="bp-backdrop" id="bpBackdropA"></div>
+  <div class="bp-backdrop" id="bpBackdropB"></div>
+  <div class="bp-backdrop-scrim"></div>
+  <button class="bp-exit-btn" id="bpExitBtn" title="Exit Big Picture">✕ Exit</button>
+  <div class="bp-filters tabs" id="bpFilters">
+    <div class="tab active" data-bpfilter="all">All</div>
+    <div class="tab" data-bpfilter="installed">Installed</div>
+    <div class="tab" data-bpfilter="backlog">Backlog</div>
+    <div class="tab" data-bpfilter="playing">Playing</div>
+    <div class="tab" data-bpfilter="completed">Completed</div>
+    <div class="tab" data-bpfilter="abandoned">Abandoned</div>
+  </div>
+  <div class="bp-stagewrap">
+    <div class="bp-floor"></div>
+    <button class="bp-nav-btn prev" id="bpPrevBtn" title="Previous">◄</button>
+    <div class="bp-stage" id="bpStage"></div>
+    <button class="bp-nav-btn next" id="bpNextBtn" title="Next">►</button>
+  </div>
+  <div class="bp-frame"></div>
+  <div class="bp-info" id="bpInfo"></div>
+  <div class="bp-hint">◄ ► / D-Pad · Move &nbsp;&nbsp; Enter / A · Play &nbsp;&nbsp; Click cover · Info &nbsp;&nbsp; Esc / B · Close</div>
+
+  <div class="bp-detail" id="bpDetail">
+    <button class="bp-detail-close" id="bpDetailClose">✕ Back</button>
+    <div class="bp-detail-inner" id="bpDetailInner"></div>
+  </div>
+
+  <div class="bp-lightbox" id="bpLightbox">
+    <button class="bp-lightbox-close" id="bpLightboxClose">✕</button>
+    <button class="bp-lightbox-nav bp-lightbox-prev" id="bpLightboxPrev">◄</button>
+    <img class="bp-lightbox-img" id="bpLightboxImg" alt="Screenshot">
+    <button class="bp-lightbox-nav bp-lightbox-next" id="bpLightboxNext">►</button>
+    <div class="bp-lightbox-count" id="bpLightboxCount"></div>
+  </div>
+</div>
+
+<script>window.APP_PLATFORM = 'steam';</script>
+<style>
+  /* Remove light effects from Big Picture backdrop */
+  .bp-backdrop { filter: none !important; }
+  .bp-backdrop.visible { opacity: 1 !important; }
+  .bp-backdrop-scrim { background: transparent !important; }
+</style>
+<script src="/app.js"></script>
+</body>
+</html>
