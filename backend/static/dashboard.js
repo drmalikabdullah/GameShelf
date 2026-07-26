@@ -78,6 +78,15 @@ function initStatusChart(byStatus) {
   const ctx = document.getElementById('statusChart').getContext('2d');
   if (charts.status) charts.status.destroy();
 
+  const plugin = {
+    id: 'glassBackground',
+    beforeDatasetsDraw(chart) {
+      const {ctx: canvasCtx, chartArea: {left, top, width, height}} = chart;
+      canvasCtx.fillStyle = 'rgba(20, 20, 30, 0.3)';
+      canvasCtx.fillRect(left, top, width, height);
+    }
+  };
+
   charts.status = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -97,7 +106,8 @@ function initStatusChart(byStatus) {
           labels: { color: '#aaa', font: { size: 12 }, padding: 16 }
         }
       }
-    }
+    },
+    plugins: [plugin]
   });
 }
 
@@ -107,6 +117,15 @@ function initPlatformChart(platforms) {
 
   const keys = ['gog', 'steam', 'ps3', 'ps4'];
   const counts = keys.map(k => platforms[k].total);
+
+  const plugin = {
+    id: 'glassBackground',
+    beforeDatasetsDraw(chart) {
+      const {ctx: canvasCtx, chartArea: {left, top, width, height}} = chart;
+      canvasCtx.fillStyle = 'rgba(20, 20, 30, 0.3)';
+      canvasCtx.fillRect(left, top, width, height);
+    }
+  };
 
   charts.platform = new Chart(ctx, {
     type: 'bar',
@@ -129,7 +148,8 @@ function initPlatformChart(platforms) {
         x: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' } },
         y: { grid: { display: false }, ticks: { color: '#aaa' } }
       }
-    }
+    },
+    plugins: [plugin]
   });
 }
 
@@ -165,6 +185,15 @@ function initActivityChart(addedByMonth) {
   const ctx = document.getElementById('activityChart').getContext('2d');
   if (charts.activity) charts.activity.destroy();
 
+  const plugin = {
+    id: 'glassBackground',
+    beforeDatasetsDraw(chart) {
+      const {ctx: canvasCtx, chartArea: {left, top, width, height}} = chart;
+      canvasCtx.fillStyle = 'rgba(20, 20, 30, 0.3)';
+      canvasCtx.fillRect(left, top, width, height);
+    }
+  };
+
   charts.activity = new Chart(ctx, {
     type: 'line',
     data: {
@@ -194,7 +223,8 @@ function initActivityChart(addedByMonth) {
         x: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' } },
         y: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' }, beginAtZero: true }
       }
-    }
+    },
+    plugins: [plugin]
   });
 }
 
