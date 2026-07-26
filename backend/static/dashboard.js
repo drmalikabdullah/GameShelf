@@ -43,7 +43,10 @@ async function loadDashboard() {
 
   // Load other sections
   await loadBuildStatus();
-  await loadInsights();
+  const insights = await loadInsights();
+  if (insights) {
+    initActivityChart(insights.added_by_month);
+  }
   loadMissingFolders();
 }
 
@@ -135,17 +138,56 @@ async function loadBuildStatus() {
   `;
 }
 
+function initActivityChart(addedByMonth) {
+  const ctx = document.getElementById('activityChart').getContext('2d');
+  if (charts.activity) charts.activity.destroy();
+
+  charts.activity = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: addedByMonth.map(m => {
+        const [year, month] = m.label.split('-');
+        return new Date(year, parseInt(month) - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      }),
+      datasets: [{
+        label: 'Games Added',
+        data: addedByMonth.map(m => m.count),
+        borderColor: '#64c8ff',
+        backgroundColor: 'rgba(100, 200, 255, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#64c8ff',
+        pointBorderColor: '#000000',
+        pointBorderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' } },
+        y: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
 async function loadInsights() {
   const d = await fetch('/api/dashboard/insights').then(r => r.json());
   const section = document.getElementById('insightsSection');
 
-  if (!section) return;
+  if (!section) return d;
 
   section.innerHTML = `
     <div class="list-title">📈 Library Insights</div>
     <div style="margin-top:16px;">
       <div style="margin-bottom:16px;">
-        <div style="font-size:12px;color:#aaa;margin-bottom:8px;">TOP RATED GAMES</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:8px;">STORAGE BY PLATFORM</div>
         ${(d.storage_by_platform || []).map(p => `
           <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(100,150,255,0.2);font-size:13px;">
             <span>${PLATFORM_LABEL[p.platform]}</span>
@@ -155,6 +197,8 @@ async function loadInsights() {
       </div>
     </div>
   `;
+
+  return d;
 }
 
 function loadMissingFolders() {
