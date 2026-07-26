@@ -7,6 +7,188 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<style>
+  .layout { background: #000000; }
+
+  .dashboard-container {
+    padding: 24px;
+    background: #000000;
+  }
+
+  .dashboard-header {
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dashboard-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+
+  .dashboard-refresh {
+    padding: 8px 16px;
+    background: rgba(100, 200, 255, 0.2);
+    border: 1px solid rgba(100, 200, 255, 0.4);
+    border-radius: 6px;
+    color: #64c8ff;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+
+  .dashboard-refresh:hover {
+    background: rgba(100, 200, 255, 0.3);
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .metric-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    color: #fff;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+
+  .metric-icon {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .metric-change {
+    font-size: 12px;
+    color: #64ff64;
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .chart-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 250px;
+  }
+
+  .list-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+
+  .list-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+    color: #ccc;
+    font-size: 13px;
+  }
+
+  .list-row:last-child {
+    border-bottom: none;
+  }
+
+  .list-title-col {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+  }
+
+  .list-meta {
+    font-size: 12px;
+    color: #64c8ff;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  .save-hint {
+    color: #aaa;
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .dash-ok { color: #64ff64; }
+  .dash-bad { color: #ff6464; }
+
+  .section-divider {
+    height: 1px;
+    background: rgba(100, 150, 255, 0.2);
+    margin: 32px 0;
+  }
+</style>
 </head>
 <body>
 
@@ -23,16 +205,101 @@
   </nav>
 
   <div class="content">
-    <header>
-      <div class="title-row">
-        <h1>Mmaphysicist's <span>Dashboard</span></h1>
-        <a class="close-btn" id="exportGamelistBtn" href="/api/export/gamelist" download>📄 Export game list (.txt)</a>
+    <div class="dashboard-container">
+      <div class="dashboard-header">
+        <h1 class="dashboard-title">📊 Dashboard</h1>
+        <a class="dashboard-refresh" id="exportGamelistBtn" href="/api/export/gamelist" download>📄 Export</a>
       </div>
-    </header>
 
-    <main id="dashMain" class="dashboard">
-      <div class="save-hint">loading…</div>
-    </main>
+      <div class="metrics-grid" id="metricsGrid">
+        <div class="metric-card" style="background: linear-gradient(135deg, rgba(100, 50, 150, 0.5), rgba(150, 100, 200, 0.3));">
+          <div class="metric-icon">🎮</div>
+          <div class="metric-label">Total Games</div>
+          <div class="metric-value" id="totalGames">-</div>
+          <div class="metric-change">all platforms</div>
+        </div>
+        <div class="metric-card" style="background: linear-gradient(135deg, rgba(100, 150, 200, 0.5), rgba(150, 180, 220, 0.3));">
+          <div class="metric-icon">💾</div>
+          <div class="metric-label">Total Storage</div>
+          <div class="metric-value" id="totalStorage">-</div>
+          <div class="metric-change">all installs</div>
+        </div>
+        <div class="metric-card" style="background: linear-gradient(135deg, rgba(100, 200, 100, 0.5), rgba(150, 220, 150, 0.3));">
+          <div class="metric-icon">✅</div>
+          <div class="metric-label">Folders Linked</div>
+          <div class="metric-value" id="foldersLinked">-</div>
+          <div class="metric-change">on disk</div>
+        </div>
+        <div class="metric-card" style="background: linear-gradient(135deg, rgba(200, 100, 100, 0.5), rgba(220, 150, 150, 0.3));">
+          <div class="metric-icon">❌</div>
+          <div class="metric-label">Missing</div>
+          <div class="metric-value" id="missingFolders">-</div>
+          <div class="metric-change">not found</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">📊 Status Distribution</div>
+          <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">🎯 Platform Breakdown</div>
+          <div class="chart-container">
+            <canvas id="platformChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <section id="buildStatusSection" class="list-card">
+        <div class="save-hint">loading build status…</div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <div class="charts-grid full-width">
+        <div class="chart-card">
+          <div class="chart-title">📈 Library Activity</div>
+          <div class="chart-container" style="height: 300px;">
+            <canvas id="activityChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="list-card">
+          <div class="list-title">⭐ Top Rated</div>
+          <div id="topRatedList"></div>
+        </div>
+        <div class="list-card">
+          <div class="list-title">💾 Largest Installs</div>
+          <div id="largestList"></div>
+        </div>
+        <div class="list-card">
+          <div class="list-title">🆕 Recently Added</div>
+          <div id="recentList"></div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <section id="insightsSection" class="list-card">
+        <div class="save-hint">loading insights…</div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <section id="missingFoldersSection" class="list-card">
+        <div class="list-title">🔍 Folder Integrity Check</div>
+        <button class="close-btn" id="scanMissingFoldersBtn" style="margin-top: -40px;">Scan for missing folders</button>
+        <div id="scanStatus" class="save-hint"></div>
+        <div id="scanResults" style="display:none;"></div>
+      </section>
+    </div>
   </div>
 </div>
 

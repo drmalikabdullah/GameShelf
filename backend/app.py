@@ -945,6 +945,92 @@ def dashboard_insights():
     })
 
 
+@app.route("/api/monitor/stats")
+def monitor_stats():
+    """Advanced dashboard statistics: library overview, platform breakdown,
+    status distribution, storage by platform, ratings, activity."""
+    db = get_db()
+
+    # Overall stats
+    total_games = db.execute("SELECT COUNT(*) c FROM games").fetchone()["c"]
+    total_size = db.execute("SELECT COALESCE(SUM(size_bytes), 0) s FROM games").fetchone()["s"]
+
+    # By status
+    by_status = {}
+    for status in ['backlog', 'playing', 'completed', 'abandoned']:
+        count = db.execute("SELECT COUNT(*) c FROM games WHERE status = ?", (status,)).fetchone()["c"]
+        by_status[status] = count
+
+    # By platform
+    by_platform = {}
+    for platform in ['gog', 'steam', 'ps3', 'ps4']:
+        data = db.execute("""
+            SELECT COUNT(*) count, COALESCE(SUM(size_bytes), 0) size
+            FROM games WHERE platform = ?
+        """, (platform,)).fetchone()
+        by_platform[platform] = {"count": data["count"], "size": data["size"]}
+
+    # Top rated games
+    top_rated = db.execute("""
+        SELECT id, title, platform, rating
+        FROM games WHERE rating IS NOT NULL
+        ORDER BY rating DESC LIMIT 5
+    """).fetchall()
+
+    # Largest games
+    largest = db.execute("""
+        SELECT id, title, platform, size_bytes
+        FROM games ORDER BY size_bytes DESC LIMIT 5
+    """).fetchall()
+
+    # Recently added
+    recent = db.execute("""
+        SELECT id, title, platform, added_at
+        FROM games ORDER BY added_at DESC LIMIT 5
+    """).fetchall()
+
+    # Rating distribution
+    rating_dist = db.execute("""
+        SELECT ROUND(rating/2) stars, COUNT(*) count
+        FROM games WHERE rating IS NOT NULL
+        GROUP BY ROUND(rating/2)
+        ORDER BY stars
+    """).fetchall()
+
+    # Games added by month (last 12)
+    by_month = db.execute("""
+        SELECT strftime('%Y-%m', added_at) month, COUNT(*) count
+        FROM games
+        WHERE added_at >= datetime('now', '-12 months')
+        GROUP BY month ORDER BY month
+    """).fetchall()
+
+    # Folder status
+    with_folder = db.execute("SELECT COUNT(*) c FROM games WHERE folder_path IS NOT NULL").fetchone()["c"]
+
+    def human_size(bytes_val):
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if bytes_val < 1024:
+                return f"{bytes_val:.1f}{unit}"
+            bytes_val /= 1024
+        return f"{bytes_val:.1f}PB"
+
+    return jsonify({
+        "total_games": total_games,
+        "total_size": total_size,
+        "total_size_human": human_size(total_size),
+        "by_status": by_status,
+        "by_platform": by_platform,
+        "folders_linked": with_folder,
+        "top_rated": [dict(r) for r in top_rated],
+        "largest": [{"id": r["id"], "title": r["title"], "platform": r["platform"],
+                     "size": r["size_bytes"], "size_human": human_size(r["size_bytes"])} for r in largest],
+        "recent": [dict(r) for r in recent],
+        "rating_distribution": [dict(r) for r in rating_dist],
+        "added_by_month": [dict(r) for r in by_month],
+    })
+
+
 @app.route("/api/scan/missing-folders")
 def scan_missing_folders():
     """Scan all game folders and report which ones are missing from disk.
