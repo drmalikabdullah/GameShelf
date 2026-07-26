@@ -1087,5 +1087,56 @@ def scan_missing_folders():
     return jsonify(summary)
 
 
+@app.route("/api/dashboard/lists")
+def dashboard_lists():
+    """Top rated, largest installs, and recently added games."""
+    db = get_db()
+
+    # Top rated (minimum 1 rating to avoid clutter)
+    top_rated = [
+        {
+            "title": r["title"],
+            "rating": r["rating"],
+            "platform": r["platform"],
+        }
+        for r in db.execute(
+            "SELECT title, rating, platform FROM games WHERE rating IS NOT NULL "
+            "ORDER BY rating DESC, title LIMIT 5"
+        ).fetchall()
+    ]
+
+    # Largest installs
+    largest = [
+        {
+            "title": r["title"],
+            "size_human": human_size(r["size_bytes"]),
+            "platform": r["platform"],
+        }
+        for r in db.execute(
+            "SELECT title, size_bytes, platform FROM games WHERE size_bytes > 0 "
+            "ORDER BY size_bytes DESC LIMIT 5"
+        ).fetchall()
+    ]
+
+    # Recently added
+    recently_added = [
+        {
+            "title": r["title"],
+            "platform": r["platform"],
+            "added_at": r["added_at"][:10] if r["added_at"] else "Unknown",
+        }
+        for r in db.execute(
+            "SELECT title, platform, added_at FROM games "
+            "ORDER BY added_at DESC LIMIT 5"
+        ).fetchall()
+    ]
+
+    return jsonify({
+        "top_rated": top_rated,
+        "largest": largest,
+        "recently_added": recently_added,
+    })
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

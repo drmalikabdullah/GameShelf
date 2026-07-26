@@ -47,6 +47,7 @@ async function loadDashboard() {
   if (insights) {
     initActivityChart(insights.added_by_month);
   }
+  await loadGameLists();
   loadMissingFolders();
 }
 
@@ -199,6 +200,56 @@ async function loadInsights() {
   `;
 
   return d;
+}
+
+async function loadGameLists() {
+  const data = await fetch('/api/dashboard/lists').then(r => r.json());
+
+  // Top Rated
+  const topRatedDiv = document.getElementById('topRatedList');
+  if (topRatedDiv) {
+    topRatedDiv.innerHTML = (data.top_rated || []).map(g => `
+      <div class="list-row">
+        <div style="flex:1;">
+          <div style="font-weight:500;">${escapeHtml(g.title)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:#ffd700;">★ ${g.rating}/10</span>
+          <span style="font-size:12px;color:#64c8ff;">${PLATFORM_LABEL[g.platform]}</span>
+        </div>
+      </div>
+    `).join('') || '<div style="color:#aaa;font-size:12px;padding:8px;">No rated games yet</div>';
+  }
+
+  // Largest Installs
+  const largestDiv = document.getElementById('largestList');
+  if (largestDiv) {
+    largestDiv.innerHTML = (data.largest || []).map(g => `
+      <div class="list-row">
+        <div style="flex:1;">
+          <div style="font-weight:500;">${escapeHtml(g.title)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:#64ff64;">${g.size_human}</span>
+          <span style="font-size:12px;color:#64c8ff;">${PLATFORM_LABEL[g.platform]}</span>
+        </div>
+      </div>
+    `).join('') || '<div style="color:#aaa;font-size:12px;padding:8px;">No games found</div>';
+  }
+
+  // Recently Added
+  const recentDiv = document.getElementById('recentList');
+  if (recentDiv) {
+    recentDiv.innerHTML = (data.recently_added || []).map(g => `
+      <div class="list-row">
+        <div style="flex:1;">
+          <div style="font-weight:500;">${escapeHtml(g.title)}</div>
+          <div style="font-size:12px;color:#999;">${g.added_at}</div>
+        </div>
+        <span style="font-size:12px;color:#64c8ff;">${PLATFORM_LABEL[g.platform]}</span>
+      </div>
+    `).join('') || '<div style="color:#aaa;font-size:12px;padding:8px;">No games yet</div>';
+  }
 }
 
 function loadMissingFolders() {
