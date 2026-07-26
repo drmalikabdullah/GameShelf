@@ -443,3 +443,31 @@ def fetch_cover(title, api_key):
             return header, "jpg"
 
     return None, None
+
+
+def fetch_steam_screenshots(appid, limit=6):
+    """Fetch up to `limit` screenshot URLs from Steam Store API for a known appid.
+    Returns list of (data, ext) tuples ready to save to disk, or empty list."""
+    url = f"https://store.steampowered.com/api/appdetails/?appids={appid}"
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.load(r)
+    except (urllib.error.HTTPError, urllib.error.URLError):
+        return []
+
+    app_data = data.get(str(appid), {}).get("data", {})
+    screenshot_urls = app_data.get("screenshots", [])
+    if not screenshot_urls:
+        return []
+
+    results = []
+    for screenshot in screenshot_urls[:limit]:
+        img_url = screenshot.get("path_thumbnail")
+        if not img_url:
+            continue
+        img_url = img_url.replace("_96x54", "")
+        img_data = download_bytes(img_url)
+        if img_data is not None:
+            results.append((img_data, "jpg"))
+    return results

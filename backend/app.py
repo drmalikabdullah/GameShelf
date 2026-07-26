@@ -231,10 +231,13 @@ def verify_gog_id(db, game_id, title):
 
 def refresh_steam_release_year(db, game_id, title):
     """Best-effort release year + review score lookup for a Steam-platform
-    game via Steam's public APIs. No-op on release year if no confident
-    appid match exists; the rating only fills in when the game doesn't
-    already have one (see verify_gog_id)."""
-    year, public_rating = steamgriddb.find_release_year_and_rating(title)
+    game via Steam's public APIs. Also saves steam_app_id for screenshot fetching."""
+    match = steamgriddb.find_steam_appid(title)
+    year, public_rating = None, None
+    if match:
+        year = steamgriddb.fetch_steam_release_year(match["id"])
+        public_rating = steamgriddb.fetch_steam_review_score(match["id"])
+        db.execute("UPDATE games SET steam_app_id = ? WHERE id = ?", (match["id"], game_id))
     db.execute("UPDATE games SET release_date = ? WHERE id = ?", (year, game_id))
     if public_rating is not None:
         db.execute("UPDATE games SET rating = ? WHERE id = ? AND rating IS NULL", (public_rating, game_id))

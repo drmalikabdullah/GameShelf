@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS games (
                                               -- reuse/collide numbers across different games).
     gog_catalog_id TEXT,                     -- the real GOG catalog product id, looked up from
                                               -- GOG's public catalog by title.
+    steam_app_id  TEXT,                      -- Steam app ID for fetching screenshots and metadata
     platform      TEXT NOT NULL DEFAULT 'gog', -- gog | steam
     title         TEXT NOT NULL,
     size_bytes    INTEGER DEFAULT 0,
