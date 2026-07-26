@@ -48,6 +48,7 @@
         <button class="close-btn" id="addGameBtn">+ Add Game</button>
         <button class="close-btn" id="trashBtn">🗑 Trash</button>
         <button class="close-btn" id="searchAllBtn">🔎 Search All Shelves</button>
+        <button class="close-btn" id="bigPictureBtn">🎮 Big Picture</button>
       </div>
     </header>
 
@@ -60,6 +61,43 @@
 
 <div class="overlay" id="overlay">
   <div class="modal" id="modal"></div>
+</div>
+
+<div class="bp-overlay" id="bpOverlay">
+  <button class="bp-exit-btn" id="bpExitBtn" title="Exit Big Picture">✕ Exit</button>
+  <div class="bp-filters tabs" id="bpFilters">
+    <div class="tab active" data-bpfilter="all">All</div>
+    <div class="tab" data-bpfilter="installed">Installed</div>
+    <div class="tab" data-bpfilter="backlog">Backlog</div>
+    <div class="tab" data-bpfilter="playing">Playing</div>
+    <div class="tab" data-bpfilter="completed">Completed</div>
+    <div class="tab" data-bpfilter="abandoned">Abandoned</div>
+  </div>
+  <input type="search" id="bpSearch" class="bp-search" placeholder="Search games..." autocomplete="off">
+  <div class="bp-backdrop" id="bpBackdropA"></div>
+  <div class="bp-backdrop" id="bpBackdropB"></div>
+  <div class="bp-stagewrap">
+    <div class="bp-floor"></div>
+    <button class="bp-nav-btn prev" id="bpPrevBtn" title="Previous">◄</button>
+    <div class="bp-stage" id="bpStage"></div>
+    <button class="bp-nav-btn next" id="bpNextBtn" title="Next">►</button>
+  </div>
+  <div class="bp-frame"></div>
+  <div class="bp-info" id="bpInfo"></div>
+  <div class="bp-hint">◄ ► / D-Pad · Move &nbsp;&nbsp; Enter / A · Play &nbsp;&nbsp; Click cover · Info &nbsp;&nbsp; Esc / B · Close</div>
+
+  <div class="bp-detail" id="bpDetail">
+    <button class="bp-detail-close" id="bpDetailClose">✕ Back</button>
+    <div class="bp-detail-inner" id="bpDetailInner"></div>
+  </div>
+
+  <div class="bp-lightbox" id="bpLightbox">
+    <button class="bp-lightbox-close" id="bpLightboxClose">✕</button>
+    <button class="bp-lightbox-nav bp-lightbox-prev" id="bpLightboxPrev">◄</button>
+    <img class="bp-lightbox-img" id="bpLightboxImg" alt="Screenshot">
+    <button class="bp-lightbox-nav bp-lightbox-next" id="bpLightboxNext">►</button>
+    <div class="bp-lightbox-count" id="bpLightboxCount"></div>
+  </div>
 </div>
 
 <script>window.APP_PLATFORM = 'ps4';</script>
