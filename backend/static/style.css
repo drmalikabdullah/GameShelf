@@ -1004,7 +1004,7 @@ a.close-btn { display: inline-block; text-decoration: none; }
 .bp-stage {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 12px;
   will-change: transform;
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   padding: 0 calc(50vw - 85px);
