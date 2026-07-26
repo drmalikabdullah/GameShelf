@@ -670,9 +670,17 @@ if (document.getElementById('searchAllBtn')) {
 const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, cardStep: 182, backdropFront: 'A' };
 
 function bpApplyFilter() {
-  bp.games = bp.filter === 'all' ? bp.allGames
+  let filtered = bp.filter === 'all' ? bp.allGames
     : bp.filter === 'installed' ? bp.allGames.filter(g => !!g.folder_path)
     : bp.allGames.filter(g => g.status === bp.filter);
+
+  // Apply search filter
+  const query = (bp.searchQuery || '').toLowerCase().trim();
+  if (query) {
+    filtered = filtered.filter(g => g.title.toLowerCase().includes(query));
+  }
+
+  bp.games = filtered;
   bp.index = 0;
   renderBigPictureStage();
 }
@@ -958,6 +966,8 @@ async function openBigPicture() {
   // Big Picture has its own filter tabs, independent of the main grid's
   // search/status filter, so it always loads the full unfiltered shelf.
   bp.filter = 'all';
+  bp.searchQuery = '';
+  document.getElementById('bpSearch').value = '';
   document.querySelectorAll('#bpFilters .tab').forEach(t => t.classList.toggle('active', t.dataset.bpfilter === 'all'));
   const params = new URLSearchParams({ platform: PLATFORM, status: 'all', q: '', sort: 'title' });
   bp.allGames = await fetch('/api/games?' + params.toString()).then(r => r.json());
@@ -995,6 +1005,10 @@ if (document.getElementById('bigPictureBtn')) {
       bp.filter = tab.dataset.bpfilter;
       bpApplyFilter();
     });
+  });
+  document.getElementById('bpSearch').addEventListener('input', (e) => {
+    bp.searchQuery = e.target.value;
+    bpApplyFilter();
   });
   document.getElementById('bpDetailClose').addEventListener('click', closeBpDetail);
   document.getElementById('bpLightboxClose').addEventListener('click', closeBpLightbox);
