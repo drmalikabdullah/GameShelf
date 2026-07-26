@@ -64,10 +64,10 @@
 
 <script>window.APP_PLATFORM = 'ps3';</script>
 <style>
-  /* Remove light effects from Big Picture backdrop */
-  .bp-backdrop { filter: none !important; }
-  .bp-backdrop.visible { opacity: 1 !important; }
-  .bp-backdrop-scrim { background: transparent !important; }
+  /* Hide backdrop elements - remove light circles completely */
+  #bpBackdropA { display: none !important; }
+  #bpBackdropB { display: none !important; }
+  .bp-backdrop-scrim { display: none !important; }
 </style>
 <script src="/app.js"></script>
 </body>

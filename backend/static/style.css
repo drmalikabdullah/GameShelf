@@ -876,6 +876,12 @@ a.close-btn { display: inline-block; text-decoration: none; }
 .bp-backdrop-scrim {
   display: none;
 }
+.bp-stagewrap::before, .bp-stagewrap::after {
+  display: none !important;
+}
+.bp-floor {
+  display: none !important;
+}
 
 .bp-exit-btn {
   position: absolute;

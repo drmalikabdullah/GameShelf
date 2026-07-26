@@ -100,6 +100,13 @@ def main():
     copy_static(fresh)
     print(f"  copied static/{' (without covers/heroes/screenshots)' if fresh else ''}")
 
+    # Also copy static folder into GameShelf subfolder for exe's BASE_DIR detection
+    game_shelf_dir = DIST_DIR / "GameShelf"
+    if game_shelf_dir.exists():
+        game_shelf_static = game_shelf_dir / "static"
+        shutil.copytree(DIST_DIR / "static", game_shelf_static, dirs_exist_ok=True)
+        print(f"  copied static/ into GameShelf/")
+
     print(f"\nDone. Distribute the whole '{DIST_DIR}' folder - "
           f"double-click GameShelf inside it to run.")
     if fresh:

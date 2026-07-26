@@ -932,10 +932,6 @@ async function openBigPicture() {
   const params = new URLSearchParams({ platform: PLATFORM, status: 'all', q: '', sort: 'title' });
   bp.allGames = await fetch('/api/games?' + params.toString()).then(r => r.json());
   document.getElementById('bpOverlay').classList.add('open');
-  // Hide backdrop circles - remove all light effects
-  document.getElementById('bpBackdropA').style.display = 'none';
-  document.getElementById('bpBackdropB').style.display = 'none';
-  document.querySelector('.bp-backdrop-scrim').style.display = 'none';
   bpApplyFilter();
   document.addEventListener('keydown', bpKeydown);
   bp.stickWasNeutral = true;
