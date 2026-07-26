@@ -859,7 +859,7 @@ a.close-btn { display: inline-block; text-decoration: none; }
 .bp-overlay {
   position: fixed;
   inset: 0;
-  background: #0a0b10;
+  background: #000000;
   z-index: 200;
   display: none;
   flex-direction: column;
@@ -927,18 +927,9 @@ a.close-btn { display: inline-block; text-decoration: none; }
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  /* perspective lives here (a fixed-size, non-scrolling container) rather
-     than on .bp-stage - .bp-stage is the giant scrolling flex row holding
-     every game, so its own center is nowhere near the focused card on
-     screen, which made rotateY on the focused card warp wildly. The
-     focused card is always visually centered in this wrapper (see the
-     stage's centering padding), so this is where the vanishing point
-     needs to be. */
   perspective: 1400px;
 }
 
-
-/* translucent curved glass panels tinting the carousel's edges blue/purple */
 .bp-stagewrap::before, .bp-stagewrap::after {
   content: '';
   position: absolute;
@@ -948,16 +939,15 @@ a.close-btn { display: inline-block; text-decoration: none; }
   pointer-events: none;
   z-index: 1;
   border-radius: 50% / 8%;
+  display: none !important;
+  background: none !important;
+  border: none !important;
 }
 .bp-stagewrap::before {
   left: 0;
-  background: linear-gradient(90deg, rgba(74,154,255,0.14), transparent);
-  border-left: 1px solid rgba(120,180,255,0.18);
 }
 .bp-stagewrap::after {
   right: 0;
-  background: linear-gradient(270deg, rgba(160,100,255,0.14), transparent);
-  border-right: 1px solid rgba(180,140,255,0.18);
 }
 
 .bp-nav-btn {
@@ -1028,12 +1018,13 @@ a.close-btn { display: inline-block; text-decoration: none; }
   background-position: center;
   background-color: var(--surface-hi);
   border: 1px solid var(--border);
-  opacity: 0.55;
+  opacity: 0;
   filter: brightness(0.7) saturate(0.75);
   transform: scale(0.65);
   transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.42s ease, filter 0.42s ease, border-color 0.42s ease, box-shadow 0.42s ease;
   position: relative;
   cursor: pointer;
+  pointer-events: none;
 }
 .bp-card.focused {
   opacity: 1;

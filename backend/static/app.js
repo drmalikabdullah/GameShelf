@@ -722,6 +722,15 @@ function renderBigPictureStage() {
 
   const g = bp.games[bp.index];
   bpUpdateBackdrop(g);
+  // Set hero image as background on stagewrap
+  const stagewrap = document.getElementById('bpStage').parentElement;
+  if (g && g.hero_url) {
+    stagewrap.style.backgroundImage = `url('${escapeHtml(heroUrl(g))}')`;
+  } else if (g && g.cover_url) {
+    stagewrap.style.backgroundImage = `url('${escapeHtml(coverUrl(g))}')`;
+  } else {
+    stagewrap.style.backgroundImage = 'none';
+  }
   const info = document.getElementById('bpInfo');
   if (!g) {
     info.innerHTML = '<div class="save-hint">No games on this shelf yet.</div>';

@@ -1,0 +1,7 @@
+# Runtime dependencies
+flask
+pywebview
+Pillow
+
+# Only needed to build the standalone GameShelf executable (see BUILDING.md)
+pyinstaller
