@@ -731,6 +731,21 @@ function renderBigPictureStage() {
   } else {
     stagewrap.style.backgroundImage = 'none';
   }
+
+  // Add game title overlay on hero background (top-right)
+  let titleOverlay = document.getElementById('bpTitleOverlay');
+  if (!titleOverlay) {
+    titleOverlay = document.createElement('div');
+    titleOverlay.id = 'bpTitleOverlay';
+    titleOverlay.className = 'bp-title-overlay';
+    stagewrap.appendChild(titleOverlay);
+  }
+  if (g) {
+    titleOverlay.innerHTML = `<div class="bp-title-overlay-text">${escapeHtml(g.title)}</div>`;
+    titleOverlay.style.display = 'block';
+  } else {
+    titleOverlay.style.display = 'none';
+  }
   const info = document.getElementById('bpInfo');
   if (!g) {
     info.innerHTML = '<div class="save-hint">No games on this shelf yet.</div>';
