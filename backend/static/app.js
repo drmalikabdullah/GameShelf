@@ -667,7 +667,7 @@ if (document.getElementById('searchAllBtn')) {
 // connected gamepad's d-pad/stick, the focused game zooms in and shows a
 // Play prompt. Gamepad state has to be polled every frame (there's no
 // "gamepadmoved" event), so this only runs while the overlay is open.
-const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, cardStep: 182, backdropFront: 'A' };
+const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, cardStep: 186, backdropFront: 'A' };
 
 function bpApplyFilter() {
   let filtered = bp.filter === 'all' ? bp.allGames
