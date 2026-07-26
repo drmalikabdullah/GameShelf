@@ -302,4 +302,51 @@ function loadMissingFolders() {
   });
 }
 
+// Handle gamelist upload
+document.getElementById('uploadGamelistBtn').addEventListener('click', () => {
+  document.getElementById('gamelistUpload').click();
+});
+
+document.getElementById('gamelistUpload').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const btn = document.getElementById('uploadGamelistBtn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Uploading…';
+
+  try {
+    const formData = new FormData();
+    formData.append('gamelist', file);
+
+    const res = await fetch('/api/build_status/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      btn.textContent = '✓ Uploaded!';
+      alert(`Build check complete:\n\n✓ Updated: ${data.updated} games\n⊙ Skipped: ${data.skipped} games\n📊 Total: ${data.total_games} games\n\nOutdated games: ${data.outdated_count}`);
+
+      // Reload dashboard to show updated build status
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else {
+      btn.textContent = '❌ Error';
+      alert('Error uploading gamelist: ' + (data.error || 'Unknown error'));
+    }
+  } catch (err) {
+    btn.textContent = '❌ Error';
+    alert('Failed to upload: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+    e.target.value = '';
+  }
+});
+
 loadDashboard();

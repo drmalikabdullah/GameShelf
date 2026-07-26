@@ -208,7 +208,11 @@
     <div class="dashboard-container">
       <div class="dashboard-header">
         <h1 class="dashboard-title">📊 Dashboard</h1>
-        <a class="dashboard-refresh" id="exportGamelistBtn" href="/api/export/gamelist" download>📄 Export</a>
+        <div style="display:flex;gap:8px;">
+          <input type="file" id="gamelistUpload" style="display:none;" accept=".txt" />
+          <button class="dashboard-refresh" id="uploadGamelistBtn" style="cursor:pointer;">📤 Upload Gamelist</button>
+          <a class="dashboard-refresh" id="exportGamelistBtn" href="/api/export/gamelist" download>📄 Export</a>
+        </div>
       </div>
 
       <div class="metrics-grid" id="metricsGrid">
