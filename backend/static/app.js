@@ -728,6 +728,13 @@ function renderBigPictureStage() {
 
   const g = bp.games[bp.index];
   bpUpdateBackdrop(g);
+  // Set hero image as stage background with transparency
+  const stagewrap = document.getElementById('bpStage').parentElement;
+  if (g && g.hero_url) {
+    stagewrap.style.backgroundImage = `linear-gradient(rgba(10, 11, 16, 0.35), rgba(10, 11, 16, 0.35)), url('${escapeHtml(heroUrl(g))}')`;
+  } else {
+    stagewrap.style.backgroundImage = 'none';
+  }
   const info = document.getElementById('bpInfo');
   if (!g) {
     info.innerHTML = '<div class="save-hint">No games on this shelf yet.</div>';

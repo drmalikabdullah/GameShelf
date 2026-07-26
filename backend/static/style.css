@@ -864,8 +864,10 @@ a.close-btn { display: inline-block; text-decoration: none; }
   display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  justify-content: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 60px;
 }
 .bp-overlay.open { display: flex; }
 
@@ -922,6 +924,9 @@ a.close-btn { display: inline-block; text-decoration: none; }
   overflow: hidden;
   position: relative;
   z-index: 2;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   /* perspective lives here (a fixed-size, non-scrolling container) rather
      than on .bp-stage - .bp-stage is the giant scrolling flex row holding
      every game, so its own center is nowhere near the focused card on
@@ -1023,8 +1028,8 @@ a.close-btn { display: inline-block; text-decoration: none; }
   background-position: center;
   background-color: var(--surface-hi);
   border: 1px solid var(--border);
-  opacity: 0.25;
-  filter: brightness(0.4) saturate(0.5) blur(1px);
+  opacity: 0.55;
+  filter: brightness(0.7) saturate(0.75);
   transform: scale(0.65);
   transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.42s ease, filter 0.42s ease, border-color 0.42s ease, box-shadow 0.42s ease;
   position: relative;
