@@ -1084,10 +1084,10 @@ a.close-btn { display: inline-block; text-decoration: none; }
 .bp-stage {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   will-change: transform;
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  padding: 0 calc(50vw - 180px);
+  padding: 0 calc(50vw - 200px);
   /* .bp-card is a grandchild of .bp-stagewrap (where perspective lives) -
      preserve-3d lets that 3D context pass through this layer instead of
      being flattened here. */
