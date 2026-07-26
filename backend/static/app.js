@@ -679,22 +679,16 @@ function bpApplyFilter() {
 
 function bpCardHtml(g, i) {
   const cover = g.cover_url ? `background-image:url('${escapeHtml(coverUrl(g))}');` : '';
+  const borderColor = caseColorFor(g);
   const d = i - bp.index;
   let extra = '';
   if (d !== 0) {
-    // Curve the flanking covers into a gentle arc instead of a flat row -
-    // perspective now lives on .bp-stagewrap (a fixed-size, non-scrolling
-    // container that's always centered on the focused card), not on
-    // .bp-stage (the huge scrolling row of every game), which is what
-    // caused these to warp into stretched smears the first time this was
-    // tried. Keeping the angle modest (and capped) keeps side covers
-    // readable instead of going edge-on.
     const angle = Math.max(-40, Math.min(40, -d * 10));
     const z = -Math.min(Math.abs(d), 6) * 18;
     const scale = Math.max(0.66, 0.8 - Math.abs(d) * 0.02);
     extra = `transform: scale(${scale}) rotateY(${angle}deg) translateZ(${z}px);`;
   }
-  return `<div class="bp-card ${i === bp.index ? 'focused' : ''}" style="${cover}${extra}" data-i="${i}"></div>`;
+  return `<div class="bp-card ${i === bp.index ? 'focused' : ''}" style="${cover}border:4px solid ${borderColor};${extra}" data-i="${i}"></div>`;
 }
 
 function bpUpdateBackdrop(g) {
