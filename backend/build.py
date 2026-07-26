@@ -52,30 +52,8 @@ def copy_static(fresh):
     shutil.copytree(src, dest, dirs_exist_ok=True, ignore=ignore)
 
 
-def build_museum_frontend():
-    """Rebuild the React/Three.js museum view (frontend/) into
-    static/museum/ before packaging, so the exe always ships whatever the
-    frontend source currently looks like. Best-effort: only needs Node.js
-    on the machine doing the *build* - the packaged exe never needs it."""
-    frontend_dir = BASE_DIR / "frontend"
-    if not (frontend_dir / "package.json").exists():
-        return
-    npm = "npm.cmd" if sys.platform == "win32" else "npm"
-    if not (frontend_dir / "node_modules").exists():
-        print("Installing frontend dependencies (first run)...")
-        subprocess.run([npm, "install"], cwd=str(frontend_dir), check=True)
-    print("Building museum frontend...")
-    subprocess.run([npm, "run", "build"], cwd=str(frontend_dir), check=True)
-
-
 def main():
     fresh = "--fresh" in sys.argv
-
-    try:
-        build_museum_frontend()
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        print(f"! Skipping museum frontend build ({e}) - "
-              f"the 3D museum page won't be included in this build.")
 
     print("Running PyInstaller...")
     result = subprocess.run(

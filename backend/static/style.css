@@ -933,8 +933,7 @@ a.close-btn { display: inline-block; text-decoration: none; }
 }
 
 
-/* translucent curved glass panels tinting the carousel's edges blue/purple,
-   echoing the museum reference image */
+/* translucent curved glass panels tinting the carousel's edges blue/purple */
 .bp-stagewrap::before, .bp-stagewrap::after {
   content: '';
   position: absolute;
@@ -990,29 +989,6 @@ a.close-btn { display: inline-block; text-decoration: none; }
   pointer-events: none;
 }
 
-.bp-museum-label {
-  position: absolute;
-  top: 26px;
-  left: 32px;
-  z-index: 6;
-  pointer-events: none;
-}
-.bp-museum-label .eyebrow {
-  font-family: var(--body);
-  font-size: 11px;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.55);
-  margin-bottom: 4px;
-}
-.bp-museum-label .title {
-  font-family: var(--display);
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.95);
-  text-shadow: 0 2px 10px rgba(0,0,0,0.6);
-}
 
 /* rounded glowing bezel around the whole scene */
 .bp-frame {
