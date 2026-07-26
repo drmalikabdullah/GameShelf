@@ -195,26 +195,31 @@ def find_hero_url(game_id, api_key):
     return hero["url"], MIME_EXT.get(hero.get("mime"), "png")
 
 
-def find_logo_url(game_id, api_key):
-    """Fetch official logo URL for a SteamGridDB game id. Returns just the URL
-    (no download) since logos are small and best served directly from CDN."""
+def find_logo_by_id(game_id, api_key):
+    """Return (image_bytes, ext) for the official logo for a SteamGridDB game id,
+    or (None, None) if not found. Downloads the logo image from CDN."""
     data = api_get(f"/logos/game/{game_id}", api_key)
     if not data or not data.get("success") or not data.get("data"):
-        return None
+        return None, None
     logo = data["data"][0]
-    return logo["url"]
+    logo_url = logo["url"]
+    image = download_bytes(logo_url)
+    if image is None:
+        return None, None
+    ext = MIME_EXT.get(logo.get("mime"), "png")
+    return image, ext
 
 
 def fetch_logo(title, api_key):
-    """Return logo URL for a game title, or None if not found. Searches by title
-    to find the SteamGridDB game id, then fetches the logo URL. Logos are served
-    directly from CDN rather than downloaded locally."""
+    """Return (image_bytes, ext) for the official logo for a game title, or
+    (None, None) if not found. Searches by title to find the SteamGridDB game id,
+    then downloads the logo image."""
     sgdb_id, _ = find_game_id(title, api_key)
     if sgdb_id is not None:
-        logo_url = find_logo_url(sgdb_id, api_key)
-        if logo_url is not None:
-            return logo_url
-    return None
+        logo_data, ext = find_logo_by_id(sgdb_id, api_key)
+        if logo_data is not None:
+            return logo_data, ext
+    return None, None
 
 
 def download_bytes(url):
