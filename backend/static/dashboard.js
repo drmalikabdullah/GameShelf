@@ -27,6 +27,19 @@ function statusLegendHtml(byStatus) {
   ).join('');
 }
 
+function histogramHtml(rows, hueClass) {
+  const max = Math.max(1, ...rows.map(r => r.count));
+  return `<div class="hist-chart ${hueClass}">
+    ${rows.map(r => `
+      <div class="hist-row">
+        <span class="hist-label">${escapeHtml(r.label)}</span>
+        <div class="hist-track"><div class="hist-fill" style="width:${(r.count / max * 100).toFixed(1)}%"></div></div>
+        <span class="hist-value">${r.count}</span>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
 async function loadDashboard() {
   const d = await fetch('/api/dashboard').then(r => r.json());
   const o = d.overall;
@@ -36,16 +49,26 @@ async function loadDashboard() {
   document.getElementById('totalStorage').textContent = o.size_human;
   document.getElementById('foldersLinked').textContent = o.folders_linked;
   document.getElementById('missingFolders').textContent = o.missing;
+  document.getElementById('actuallyInstalled').textContent = d.playable;
+  document.getElementById('idsVerified').textContent = d.ids_verified;
+  document.getElementById('ratedCount').textContent = d.rated_count;
+  if (d.avg_rating) {
+    document.getElementById('avgRating').textContent = `avg ${d.avg_rating}/10`;
+  }
+  document.getElementById('recentlyAdded').textContent = d.recently_added_7d;
+  document.getElementById('trashCount').textContent = `${d.trash_count}/50`;
 
   // Initialize charts
   initStatusChart(o.by_status);
   initPlatformChart(d.platforms);
 
   // Load other sections
+  await loadPlatformCards(d.platforms);
   await loadBuildStatus();
   const insights = await loadInsights();
   if (insights) {
     initActivityChart(insights.added_by_month);
+    renderHistograms(insights);
   }
   await loadGameLists();
   loadMissingFolders();
@@ -110,33 +133,32 @@ function initPlatformChart(platforms) {
   });
 }
 
-async function loadBuildStatus() {
-  const b = await fetch('/api/build_status').then(r => r.json());
-  const section = document.getElementById('buildStatusSection');
+async function loadPlatformCards(platforms) {
+  const section = document.getElementById('platformCardsSection');
+  if (!section) return;
 
-  section.innerHTML = `
-    <div class="list-title">🏗️ Build Status - GOG Shelf</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;">
-      <div style="background:rgba(100,255,100,0.2);padding:16px;border-radius:8px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:#64ff64;">${b.up_to_date}</div>
-        <div style="font-size:12px;color:#aaa;">Up to date</div>
+  const html = ['gog', 'steam', 'ps3', 'ps4'].map(key => {
+    const p = platforms[key];
+    const showPlayable = key === 'gog' || key === 'steam';
+    return `
+      <div class="platform-card">
+        <div class="platform-title">${PLATFORM_LABEL[key]} Shelf</div>
+        ${statusBarHtml(p.by_status, p.total)}
+        <div class="status-legend">${statusLegendHtml(p.by_status)}</div>
+        <div class="platform-meta">
+          <span>${p.total} games · ${p.size_human}</span>
+          <span class="${p.missing ? 'dash-bad' : 'dash-ok'}">${p.folders_linked} linked${p.missing ? `, ${p.missing} missing` : ''}</span>
+        </div>
+        ${showPlayable ? `
+        <div class="platform-meta" style="border-top: none; margin-top: 8px; padding-top: 0;">
+          <span>Actually installed</span>
+          <span class="${p.playable ? 'dash-ok' : 'dash-bad'}">${p.playable}/${p.total}</span>
+        </div>` : ''}
       </div>
-      <div style="background:rgba(255,150,100,0.2);padding:16px;border-radius:8px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:#ff9500;">${b.outdated}</div>
-        <div style="font-size:12px;color:#aaa;">Outdated</div>
-      </div>
-      <div style="background:rgba(150,150,150,0.2);padding:16px;border-radius:8px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:#aaa;">${b.unverified}</div>
-        <div style="font-size:12px;color:#aaa;">Unverified</div>
-      </div>
-    </div>
-    ${statusBarHtml({ backlog: b.up_to_date, playing: b.outdated, completed: b.unverified, abandoned: 0 }, b.up_to_date + b.outdated + b.unverified)}
-    <div class="status-legend" style="margin-top:12px;">
-      <span class="leg-backlog">${b.up_to_date} Up to date</span>
-      <span class="leg-playing">${b.outdated} Outdated</span>
-      <span class="leg-completed">${b.unverified} Unverified</span>
-    </div>
-  `;
+    `;
+  }).join('');
+
+  section.innerHTML = `<div class="platform-grid">${html}</div>`;
 }
 
 function initActivityChart(addedByMonth) {
@@ -167,15 +189,75 @@ function initActivityChart(addedByMonth) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      },
+      plugins: { legend: { display: false } },
       scales: {
         x: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' } },
         y: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' }, beginAtZero: true }
       }
     }
   });
+}
+
+function renderHistograms(data) {
+  const sizeDiv = document.getElementById('sizeDistributionChart');
+  const ratingDiv = document.getElementById('ratingDistributionChart');
+
+  if (sizeDiv) {
+    sizeDiv.innerHTML = histogramHtml(data.size_histogram, 'hue-teal');
+  }
+  if (ratingDiv) {
+    ratingDiv.innerHTML = histogramHtml(data.rating_histogram, 'hue-gold');
+  }
+}
+
+async function loadBuildStatus() {
+  const b = await fetch('/api/build_status').then(r => r.json());
+  const section = document.getElementById('buildStatusSection');
+
+  section.innerHTML = `
+    <div class="list-title">🏗️ Build Status - GOG Shelf</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;">
+      <div style="background:rgba(100,255,100,0.2);padding:16px;border-radius:8px;text-align:center;">
+        <div style="font-size:24px;font-weight:700;color:#64ff64;">${b.up_to_date}</div>
+        <div style="font-size:12px;color:#aaa;">Up to date</div>
+      </div>
+      <div style="background:rgba(255,150,100,0.2);padding:16px;border-radius:8px;text-align:center;">
+        <div style="font-size:24px;font-weight:700;color:#ff9500;">${b.outdated}</div>
+        <div style="font-size:12px;color:#aaa;">Outdated</div>
+      </div>
+      <div style="background:rgba(150,150,150,0.2);padding:16px;border-radius:8px;text-align:center;">
+        <div style="font-size:24px;font-weight:700;color:#aaa;">${b.unverified}</div>
+        <div style="font-size:12px;color:#aaa;">Unverified</div>
+      </div>
+    </div>
+    ${b.outdated ? `
+    <button class="close-btn" id="toggleOutdatedBtn" style="margin-bottom:16px;">
+      ⚠ View outdated games (${b.outdated})
+    </button>
+    <div id="outdatedList" class="list-card" style="display:none;margin-bottom:16px;">
+      <div class="list-title">⚠️ Outdated Games</div>
+      ${b.outdated_list.map(g => `
+        <div class="outdated-row">
+          <div class="outdated-cover" style="background-image:url('${escapeHtml(g.cover_url || '')}?t=${encodeURIComponent(g.updated_at || '')}')"></div>
+          <div style="flex:1;">
+            <div style="font-weight:500;">${escapeHtml(g.title)}</div>
+            <div style="font-size:12px;color:#999;">${g.current_build} <span class="build-arrow">→</span> ${g.latest_build}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+    ${b.not_comparable ? `<div class="save-hint" style="margin-top:10px;">+ ${b.not_comparable} use old version format (can't compare)</div>` : ''}
+  `;
+
+  if (b.outdated) {
+    document.getElementById('toggleOutdatedBtn').addEventListener('click', () => {
+      const list = document.getElementById('outdatedList');
+      const btn = document.getElementById('toggleOutdatedBtn');
+      const open = list.style.display !== 'none';
+      list.style.display = open ? 'none' : '';
+      btn.textContent = open ? `⚠ View outdated games (${b.outdated})` : `▲ Hide outdated games`;
+    });
+  }
 }
 
 async function loadInsights() {
@@ -329,7 +411,7 @@ document.getElementById('gamelistUpload').addEventListener('change', async (e) =
 
     if (res.ok) {
       btn.textContent = '✓ Uploaded!';
-      alert(`Build check complete:\n\n✓ Updated: ${data.updated} games\n⊙ Skipped: ${data.skipped} games\n📊 Total: ${data.total_games} games\n\nOutdated games: ${data.outdated_count}`);
+      alert(`Build check complete:\n\n✓ Updated: ${data.updated} games\n⊙ Skipped: ${data.skipped} games\n📊 Total: ${data.total_games} games\n\nOutdated games: ${data.outdated_count || 0}`);
 
       // Reload dashboard to show updated build status
       setTimeout(() => {
