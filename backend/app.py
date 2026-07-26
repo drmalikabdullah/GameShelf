@@ -684,6 +684,7 @@ def build_status():
 
     up_to_date = outdated = unverified = 0
     outdated_list = []
+    unverified_list = []
     not_comparable_list = []
     for r in rows:
         # a real GOG build id is always plain digits - anything else (a
@@ -694,15 +695,27 @@ def build_status():
             continue
         if not r["latest_build"]:
             unverified += 1
+            unverified_list.append({
+                "id": r["id"], "title": r["title"], "cover_url": r["cover_url"],
+                "gog_id": r["gog_id"], "reason": "No build info available"
+            })
             continue
         try:
             current = int(r["gog_id"]) if r["gog_id"].isdigit() else None
             latest = int(r["latest_build"])
         except ValueError:
             unverified += 1
+            unverified_list.append({
+                "id": r["id"], "title": r["title"], "cover_url": r["cover_url"],
+                "gog_id": r["gog_id"], "reason": "Invalid build format"
+            })
             continue
         if current is None:
             unverified += 1
+            unverified_list.append({
+                "id": r["id"], "title": r["title"], "cover_url": r["cover_url"],
+                "gog_id": r["gog_id"], "reason": "Missing current build"
+            })
             continue
         if current < latest:
             outdated += 1
@@ -714,6 +727,7 @@ def build_status():
             up_to_date += 1
 
     outdated_list.sort(key=lambda g: g["title"].lower())
+    unverified_list.sort(key=lambda g: g["title"].lower())
     not_comparable_list.sort(key=lambda g: g["title"].lower())
     return jsonify({
         "total": len(rows),
@@ -722,6 +736,7 @@ def build_status():
         "unverified": unverified,
         "not_comparable": len(not_comparable_list),
         "outdated_list": outdated_list,
+        "unverified_list": unverified_list,
         "not_comparable_list": not_comparable_list,
     })
 

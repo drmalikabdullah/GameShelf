@@ -246,6 +246,22 @@ async function loadBuildStatus() {
         </div>
       `).join('')}
     </div>` : ''}
+    ${b.unverified ? `
+    <button class="close-btn" id="toggleUnverifiedBtn" style="margin-bottom:16px;">
+      ❓ View unverified games (${b.unverified})
+    </button>
+    <div id="unverifiedList" class="list-card" style="display:none;margin-bottom:16px;">
+      <div class="list-title">❓ Unverified Games</div>
+      ${b.unverified_list.map(g => `
+        <div class="outdated-row">
+          <div class="outdated-cover" style="background-image:url('${escapeHtml(g.cover_url || '')}')"></div>
+          <div style="flex:1;">
+            <div style="font-weight:500;">${escapeHtml(g.title)}</div>
+            <div style="font-size:12px;color:#999;">${g.reason} · GOG ID: ${g.gog_id}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>` : ''}
     ${b.not_comparable ? `<div class="save-hint" style="margin-top:10px;">+ ${b.not_comparable} use old version format (can't compare)</div>` : ''}
   `;
 
@@ -256,6 +272,16 @@ async function loadBuildStatus() {
       const open = list.style.display !== 'none';
       list.style.display = open ? 'none' : '';
       btn.textContent = open ? `⚠ View outdated games (${b.outdated})` : `▲ Hide outdated games`;
+    });
+  }
+
+  if (b.unverified) {
+    document.getElementById('toggleUnverifiedBtn').addEventListener('click', () => {
+      const list = document.getElementById('unverifiedList');
+      const btn = document.getElementById('toggleUnverifiedBtn');
+      const open = list.style.display !== 'none';
+      list.style.display = open ? 'none' : '';
+      btn.textContent = open ? `❓ View unverified games (${b.unverified})` : `▲ Hide unverified games`;
     });
   }
 }
