@@ -732,19 +732,26 @@ function renderBigPictureStage() {
     stagewrap.style.backgroundImage = 'none';
   }
 
-  // Add game title overlay on hero background (top-right)
-  let titleOverlay = document.getElementById('bpTitleOverlay');
-  if (!titleOverlay) {
-    titleOverlay = document.createElement('div');
-    titleOverlay.id = 'bpTitleOverlay';
-    titleOverlay.className = 'bp-title-overlay';
-    stagewrap.appendChild(titleOverlay);
+  // Add game logo/title overlay on hero background (top-right)
+  const bpOverlay = document.getElementById('bpOverlay');
+  let logoOverlay = document.getElementById('bpLogoOverlay');
+  if (!logoOverlay) {
+    logoOverlay = document.createElement('div');
+    logoOverlay.id = 'bpLogoOverlay';
+    logoOverlay.className = 'bp-logo-overlay';
+    bpOverlay.appendChild(logoOverlay);
   }
   if (g) {
-    titleOverlay.innerHTML = `<div class="bp-title-overlay-text">${escapeHtml(g.title)}</div>`;
-    titleOverlay.style.display = 'block';
+    if (g.logo_url) {
+      // Display official SteamGridDB logo
+      logoOverlay.innerHTML = `<img src="${escapeHtml(g.logo_url)}" alt="${escapeHtml(g.title)} logo" class="bp-logo-image">`;
+    } else {
+      // Fallback to stylized game title text
+      logoOverlay.innerHTML = `<div class="bp-title-overlay-text">${escapeHtml(g.title)}</div>`;
+    }
+    logoOverlay.style.display = 'flex';
   } else {
-    titleOverlay.style.display = 'none';
+    logoOverlay.style.display = 'none';
   }
   const info = document.getElementById('bpInfo');
   if (!g) {

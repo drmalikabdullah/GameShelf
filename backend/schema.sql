@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS games (
     tags          TEXT,                      -- comma-separated, user-defined
     cover_url     TEXT,
     hero_url      TEXT,                      -- wide banner art for the detail modal
+    logo_url      TEXT,                      -- official logo from SteamGridDB
     genres        TEXT,                      -- comma-separated, from enrichment
     description   TEXT,
     developer     TEXT,                      -- comma-separated, from enrichment
