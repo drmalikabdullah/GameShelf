@@ -721,7 +721,7 @@ function renderBigPictureStage() {
   stage.innerHTML = bp.games.map((g, i) => bpCardHtml(g, i)).join('');
 
   // Center the focused card: translate by card offset, then by half container width to center
-  const stagePadding = window.innerWidth * 0.5 - 180;
+  const stagePadding = window.innerWidth * 0.5 - 200;
   const translate = -bp.index * bp.cardStep - stagePadding + window.innerWidth * 0.5;
   stage.style.transform = `translateX(${translate}px)`;
 
