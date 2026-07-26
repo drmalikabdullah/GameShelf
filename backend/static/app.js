@@ -742,7 +742,6 @@ function renderBigPictureStage() {
     ? `<div class="bp-genres">${g.genres.split(',').map(t => `<span class="bp-genre-pill">${escapeHtml(t.trim())}</span>`).join('')}</div>`
     : '';
   info.innerHTML = `
-    ${g.hero_url ? `<div class="bp-hero-banner" style="background-image:url('${escapeHtml(heroUrl(g))}')"></div>` : ''}
     <h2>${escapeHtml(g.title)}${g.release_date ? ` <span class="release-year">(${escapeHtml(g.release_date)})</span>` : ''}</h2>
     <div class="bp-meta">${g.size_human}${g.rating ? ' · ' + starString(g.rating) : ''} · <b>${g.status}</b>${devLine}</div>
     ${genrePills}
