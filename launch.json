@@ -7,14 +7,6 @@
       "runtimeArgs": ["app.py"],
       "port": 5000,
       "autoPort": false
-    },
-    {
-      "name": "museum-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend", "run", "dev", "--", "--host"],
-      "port": 5173,
-      "autoPort": true,
-      "url": "http://localhost:5173"
     }
   ]
 }

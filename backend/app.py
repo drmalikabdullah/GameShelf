@@ -307,21 +307,6 @@ def settings_page():
     return send_from_directory(app.static_folder, "settings.html")
 
 
-@app.route("/museum")
-@app.route("/museum/")
-def museum_page():
-    """The React/Three.js 3D museum view - a separate build (see
-    frontend/) compiled ahead of time into static/museum/, not part of the
-    app's own no-build-step static assets. Falls back to a friendly error
-    if `npm run build` was never run for this checkout."""
-    index_path = Path(app.static_folder) / "museum" / "index.html"
-    if not index_path.exists():
-        return (
-            "The 3D museum view hasn't been built yet. Run `npm run build` "
-            "in the frontend/ folder, then reload this page.",
-            404,
-        )
-    return send_from_directory(Path(app.static_folder) / "museum", "index.html")
 
 
 @app.route("/api/settings/steamgriddb_key", methods=["GET"])
