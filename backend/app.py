@@ -116,6 +116,15 @@ def load_overrides():
 app = Flask(__name__, static_folder=str(BASE_DIR / "static"), static_url_path="")
 
 
+@app.after_request
+def disable_caching(response):
+    """Disable caching for all responses to force fresh file loading."""
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+
 def get_db():
     if "db" not in g:
         g.db = sqlite3.connect(DB_PATH)
