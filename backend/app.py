@@ -945,5 +945,61 @@ def dashboard_insights():
     })
 
 
+@app.route("/api/scan/missing-folders")
+def scan_missing_folders():
+    """Scan all game folders and report which ones are missing from disk.
+    Returns detailed info about games with missing installers/backups."""
+    db = get_db()
+
+    games = db.execute("""
+        SELECT id, title, platform, folder_path, size_bytes, status
+        FROM games
+        ORDER BY title
+    """).fetchall()
+
+    missing = []
+    found = []
+
+    for game in games:
+        if not game["folder_path"]:
+            missing.append({
+                "id": game["id"],
+                "title": game["title"],
+                "platform": game["platform"],
+                "reason": "No folder path set",
+                "size_bytes": game["size_bytes"],
+                "status": game["status"],
+            })
+            continue
+
+        path = Path(game["folder_path"])
+        if not path.exists():
+            missing.append({
+                "id": game["id"],
+                "title": game["title"],
+                "platform": game["platform"],
+                "folder_path": game["folder_path"],
+                "reason": "Folder not found on disk",
+                "size_bytes": game["size_bytes"],
+                "status": game["status"],
+            })
+        else:
+            found.append({
+                "id": game["id"],
+                "title": game["title"],
+                "platform": game["platform"],
+            })
+
+    summary = {
+        "total_games": len(games),
+        "found_count": len(found),
+        "missing_count": len(missing),
+        "missing_percentage": round(100 * len(missing) / len(games), 1) if games else 0,
+        "missing_games": missing,
+    }
+
+    return jsonify(summary)
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

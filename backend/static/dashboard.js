@@ -271,6 +271,71 @@ async function loadDashboard() {
 
   loadBuildStatus();
   loadInsights();
+
+  const scanSection = document.createElement('section');
+  scanSection.id = 'missingFoldersSection';
+  scanSection.innerHTML = `
+    <div class="dash-section-title-row">
+      <div class="dash-section-title">🔍 Folder integrity check</div>
+      <button class="close-btn" id="scanMissingFoldersBtn">Scan for missing folders</button>
+    </div>
+    <div id="scanStatus" class="save-hint"></div>
+    <div id="scanResults" style="display:none;"></div>
+  `;
+  main.appendChild(scanSection);
+
+  const scanBtn = document.getElementById('scanMissingFoldersBtn');
+  const statusDiv = document.getElementById('scanStatus');
+  const resultsDiv = document.getElementById('scanResults');
+
+  scanBtn.addEventListener('click', async () => {
+    scanBtn.disabled = true;
+    scanBtn.textContent = '⏳ Scanning…';
+    statusDiv.textContent = 'Checking all game folders on disk...';
+    statusDiv.classList.add('working');
+
+    try {
+      const res = await fetch('/api/scan/missing-folders');
+      const data = await res.json();
+
+      scanBtn.disabled = false;
+      scanBtn.textContent = 'Scan for missing folders';
+      statusDiv.classList.remove('working');
+
+      if (data.missing_count === 0) {
+        statusDiv.textContent = `✓ All ${data.total_games} game folders found on disk!`;
+        statusDiv.classList.add('dash-ok');
+        resultsDiv.style.display = 'none';
+      } else {
+        statusDiv.textContent = `⚠ ${data.missing_count} of ${data.total_games} folders missing (${data.missing_percentage}%)`;
+        statusDiv.classList.add('dash-bad');
+
+        const rows = data.missing_games.map(g => `
+          <div class="dash-list-row">
+            <div style="flex:1;">
+              <div style="font-weight:500;">${escapeHtml(g.title)}</div>
+              <div style="font-size:12px;color:var(--muted);">${escapeHtml(g.folder_path || g.reason)}</div>
+            </div>
+            <span class="dlr-meta">${PLATFORM_LABEL[g.platform]} · ${g.status}</span>
+          </div>
+        `).join('');
+
+        resultsDiv.innerHTML = `
+          <div class="dash-list-card" style="margin-top:14px;">
+            <div class="dash-section-title" style="font-size:13px;">Missing game folders:</div>
+            ${rows}
+          </div>
+        `;
+        resultsDiv.style.display = '';
+      }
+    } catch (e) {
+      scanBtn.disabled = false;
+      scanBtn.textContent = 'Scan for missing folders';
+      statusDiv.classList.remove('working');
+      statusDiv.textContent = `Error scanning folders: ${e.message}`;
+      statusDiv.classList.add('dash-bad');
+    }
+  });
 }
 
 loadDashboard();
