@@ -1001,6 +1001,19 @@ document.querySelectorAll('.tab').forEach(tab => {
 fetchGames();
 fetchStats();
 
+// Remove the 3D Museum link and label
+(function removeMuseum() {
+  document.querySelectorAll('a[href*="/museum"]').forEach(link => {
+    console.log('Removing museum link:', link.outerHTML);
+    link.remove();
+  });
+  const label = document.getElementById('bpMuseumLabel');
+  if (label) {
+    console.log('Removing museum label');
+    label.remove();
+  }
+})();
+
 // Force hide backdrops - remove those light circles
 (function hideBackdrops() {
   const style = document.createElement('style');
