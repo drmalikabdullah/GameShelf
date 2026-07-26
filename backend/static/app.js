@@ -667,7 +667,7 @@ if (document.getElementById('searchAllBtn')) {
 // connected gamepad's d-pad/stick, the focused game zooms in and shows a
 // Play prompt. Gamepad state has to be polled every frame (there's no
 // "gamepadmoved" event), so this only runs while the overlay is open.
-const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, cardStep: 192, backdropFront: 'A' };
+const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, cardStep: 182, backdropFront: 'A' };
 
 function bpApplyFilter() {
   bp.games = bp.filter === 'all' ? bp.allGames
@@ -711,7 +711,12 @@ function bpUpdateBackdrop(g) {
 function renderBigPictureStage() {
   const stage = document.getElementById('bpStage');
   stage.innerHTML = bp.games.map((g, i) => bpCardHtml(g, i)).join('');
-  stage.style.transform = `translateX(${-bp.index * bp.cardStep}px)`;
+
+  // Center the focused card: translate by card offset, then by half container width to center
+  const stagePadding = window.innerWidth * 0.5 - 180;
+  const translate = -bp.index * bp.cardStep - stagePadding + window.innerWidth * 0.5;
+  stage.style.transform = `translateX(${translate}px)`;
+
   stage.querySelectorAll('.bp-card').forEach(card => {
     card.addEventListener('click', () => {
       const i = parseInt(card.dataset.i);
