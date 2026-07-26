@@ -1,6 +1,8 @@
 # Personal data - never commit
 backend/games.db
 backend/steamgriddb_key.txt
+backend/gogdb_index.sqlite3
+backend/library.db
 
 # Downloaded cover art
 backend/covers/

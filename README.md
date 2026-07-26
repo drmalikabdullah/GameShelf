@@ -1,33 +1,58 @@
-# The Shelf — your GOG library catalogue
+# GameShelf — Your Game Library Catalogue
 
-A tiny local app: SQLite database + Flask API + single-page frontend.
-No cloud, no accounts, everything lives in `games.db` on your machine.
+A local app to organize your game library: SQLite database + Flask API + web UI.
+No cloud, no accounts. Everything lives in `games.db` on your machine.
 
-## What's here
+## Quick Start
 
-```
-parse_gog.py     -> parses a raw folder-listing .txt into clean games.json
-load_db.py       -> loads games.json into games.db (safe to re-run / merge more lists)
-schema.sql       -> the SQLite schema
-app.py           -> Flask backend (REST API + serves the frontend)
-static/index.html -> the catalogue UI (search, filters, status, rating, notes)
-enrich.py        -> optional: pulls cover art + metadata from GOG's public API
-games.json       -> already-parsed output from your first list
-games.db         -> already-built database from your first list (116 games)
-```
-
-## Quick start
+### 1. Install dependencies
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install flask
+cd backend
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+# On Mac/Linux:
+source venv/bin/activate
 
-python3 app.py
+pip install -r requirements.txt
 ```
 
-Then open **http://127.0.0.1:5000** — the catalogue loads straight from `games.db`,
-which is already populated from your first list.
+### 2. Run the app
+
+```bash
+python app.py
+```
+
+Then open **http://127.0.0.1:5000** in your browser.
+
+## What's Inside
+
+**Backend** (`backend/`):
+- `app.py` — Flask server & REST API
+- `games.db` — SQLite database (your library)
+- `schema.sql` — Database schema
+- `requirements.txt` — Python dependencies
+- Parsers: `parse_gog.py`, `parse_steam.py`, `parse_ps3.py`
+- Enrichers: `enrich.py`, `enrich_steamgriddb.py`, `enrich_story.py`, `steamgriddb.py`, `gog_catalog.py`
+- Utilities: `build.py` (compile to .exe), `launcher.py`, `check_latest_builds.py`, etc.
+
+**Frontend** (`static/`):
+- `index.html`, `dashboard.html` — Web UI pages
+- `app.js`, `dashboard.js` — JavaScript logic
+- `style.css` — Styling
+- `covers/`, `heroes/`, `screenshots/` — Game artwork
+
+## Adding Games
+
+Parse a game list file:
+
+```bash
+python parse_gog.py your_list.txt -o games.json
+python load_db.py games.json --db games.db
+```
+
+This merges new games into your library without duplicating or losing your notes/ratings.
 
 ## Adding your second list
 
