@@ -195,6 +195,28 @@ def find_hero_url(game_id, api_key):
     return hero["url"], MIME_EXT.get(hero.get("mime"), "png")
 
 
+def find_logo_url(game_id, api_key):
+    """Fetch official logo URL for a SteamGridDB game id. Returns just the URL
+    (no download) since logos are small and best served directly from CDN."""
+    data = api_get(f"/logos/game/{game_id}", api_key)
+    if not data or not data.get("success") or not data.get("data"):
+        return None
+    logo = data["data"][0]
+    return logo["url"]
+
+
+def fetch_logo(title, api_key):
+    """Return logo URL for a game title, or None if not found. Searches by title
+    to find the SteamGridDB game id, then fetches the logo URL. Logos are served
+    directly from CDN rather than downloaded locally."""
+    sgdb_id, _ = find_game_id(title, api_key)
+    if sgdb_id is not None:
+        logo_url = find_logo_url(sgdb_id, api_key)
+        if logo_url is not None:
+            return logo_url
+    return None
+
+
 def download_bytes(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     try:

@@ -175,6 +175,14 @@ def save_cover(db, game_id, data, ext):
     db.commit()
 
 
+def save_logo_url(db, game_id, logo_url):
+    """Store the official SteamGridDB logo URL for a game. Logos are served
+    directly from the CDN rather than downloaded locally."""
+    if logo_url:
+        db.execute("UPDATE games SET logo_url = ? WHERE id = ?", (logo_url, game_id))
+        db.commit()
+
+
 def save_hero(db, game_id, data, ext):
     old_hero = db.execute("SELECT hero_url FROM games WHERE id = ?", (game_id,)).fetchone()["hero_url"]
     HEROES_DIR.mkdir(parents=True, exist_ok=True)
@@ -255,6 +263,9 @@ def apply_title(db, game_id, raw_title, platform="gog"):
             hero_data, hero_ext = steamgriddb.fetch_hero_by_id(sgdb_id, api_key)
             if hero_data is not None:
                 save_hero(db, game_id, hero_data, hero_ext)
+            logo_url = steamgriddb.find_logo_url(sgdb_id, api_key)
+            if logo_url:
+                save_logo_url(db, game_id, logo_url)
             return steamgriddb.fetch_game_name(sgdb_id, api_key) or raw_title
 
         override = load_overrides().get(raw_title)
@@ -270,12 +281,19 @@ def apply_title(db, game_id, raw_title, platform="gog"):
                 save_cover(db, game_id, data, ext)
             if hero_data is not None:
                 save_hero(db, game_id, hero_data, hero_ext)
+            if "steam_appid" not in override:
+                logo_url = steamgriddb.find_logo_url(override["sgdb_id"], api_key)
+                if logo_url:
+                    save_logo_url(db, game_id, logo_url)
             return raw_title
 
         data, ext = steamgriddb.fetch_cover(raw_title, api_key)
         if data is not None:
             save_cover(db, game_id, data, ext)
             refresh_hero(db, game_id, raw_title)
+            logo_url = steamgriddb.fetch_logo(raw_title, api_key)
+            if logo_url:
+                save_logo_url(db, game_id, logo_url)
             return raw_title
 
     if platform == "gog":
