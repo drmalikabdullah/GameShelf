@@ -2263,3 +2263,353 @@ body.gog-shelf-page::before {
   .settings-page .field > div { flex-wrap: wrap; }
   .settings-page #f-key { flex-basis: 100% !important; }
 }
+
+/* Dashboard: immersive command center */
+.dashboard-page .dashboard-container {
+  position: relative;
+  min-height: 100vh;
+  padding: 30px 34px 70px;
+  background: transparent;
+}
+.dashboard-page .dashboard-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 210px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(67,210,255,0.075), transparent 48%),
+    radial-gradient(ellipse at 82% 0%, rgba(237,63,158,0.06), transparent 45%);
+}
+.dashboard-page .dashboard-header {
+  margin-bottom: 25px;
+  padding: 4px 2px 19px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.dashboard-page .dashboard-title {
+  color: rgba(255,255,255,0.97);
+  font-family: var(--display);
+  font-size: clamp(31px, 3vw, 43px);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.dashboard-page .dashboard-refresh {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 9px 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.76);
+  background: rgba(255,255,255,0.045);
+  box-shadow: inset 0 1px rgba(255,255,255,0.035);
+  font-family: var(--body);
+  text-decoration: none;
+  backdrop-filter: blur(14px);
+}
+.dashboard-page .dashboard-refresh:hover {
+  color: #fff;
+  border-color: rgba(67,210,255,0.42);
+  background: rgba(67,210,255,0.075);
+  box-shadow: 0 8px 24px rgba(67,210,255,0.08);
+}
+.dashboard-page #uploadGamelistBtn {
+  border-color: rgba(67,210,255,0.28);
+}
+.dashboard-page #exportGamelistBtn {
+  border-color: rgba(237,63,158,0.24);
+}
+
+.dashboard-page .metrics-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.dashboard-page .metric-card {
+  --metric-accent: #43d2ff;
+  position: relative;
+  min-height: 142px;
+  overflow: hidden;
+  padding: 20px 21px;
+  border: 1px solid rgba(255,255,255,0.085);
+  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(17,23,34,0.82), rgba(7,10,17,0.75)) !important;
+  box-shadow:
+    0 20px 48px rgba(0,0,0,0.29),
+    inset 0 1px rgba(255,255,255,0.045);
+  backdrop-filter: blur(17px) saturate(1.15);
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.dashboard-page .metric-card:nth-child(2) { --metric-accent: #7788ff; }
+.dashboard-page .metric-card:nth-child(3) { --metric-accent: #63e6a3; }
+.dashboard-page .metric-card:nth-child(4) { --metric-accent: #ed6687; }
+.dashboard-page .metric-card:nth-child(5) { --metric-accent: #8ee56f; }
+.dashboard-page .metric-card:nth-child(6) { --metric-accent: #f0a24a; }
+.dashboard-page .metric-card:nth-child(7) { --metric-accent: #ed3f9e; }
+.dashboard-page .metric-card:nth-child(8) { --metric-accent: #55ded5; }
+.dashboard-page .metric-card:nth-child(9) { --metric-accent: #a982ff; }
+.dashboard-page .metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--metric-accent), transparent 78%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--metric-accent) 45%, transparent);
+}
+.dashboard-page .metric-card::after {
+  content: '';
+  position: absolute;
+  top: -70px;
+  right: -55px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--metric-accent) 10%, transparent);
+  filter: blur(12px);
+  pointer-events: none;
+}
+.dashboard-page .metric-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--metric-accent) 38%, rgba(255,255,255,0.08));
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--metric-accent) 8%, transparent),
+    0 25px 55px rgba(0,0,0,0.4);
+}
+.dashboard-page .metric-icon {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  border: 1px solid color-mix(in srgb, var(--metric-accent) 25%, transparent);
+  border-radius: 9px;
+  color: var(--metric-accent);
+  background: color-mix(in srgb, var(--metric-accent) 8%, transparent);
+  font-size: 16px;
+}
+.dashboard-page .metric-label {
+  margin-bottom: 6px;
+  color: rgba(255,255,255,0.42);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.15px;
+}
+.dashboard-page .metric-value {
+  margin-bottom: 4px;
+  color: rgba(255,255,255,0.96);
+  font-family: var(--display);
+  font-size: 31px;
+  line-height: 1;
+}
+.dashboard-page .metric-change {
+  color: color-mix(in srgb, var(--metric-accent) 80%, white);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.dashboard-page .charts-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.dashboard-page .charts-grid:has(#topRatedList) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.dashboard-page .chart-card,
+.dashboard-page .list-card,
+.dashboard-page .platform-card {
+  border: 1px solid rgba(255,255,255,0.085);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(15,20,30,0.76), rgba(6,9,15,0.68));
+  box-shadow:
+    0 22px 55px rgba(0,0,0,0.28),
+    inset 0 1px rgba(255,255,255,0.04);
+  backdrop-filter: blur(18px) saturate(1.15);
+}
+.dashboard-page .chart-card,
+.dashboard-page .list-card {
+  padding: 21px;
+}
+.dashboard-page .chart-card {
+  min-width: 0;
+}
+.dashboard-page .charts-grid.full-width > .chart-card:only-child {
+  grid-column: 1 / -1;
+}
+.dashboard-page .chart-title,
+.dashboard-page .list-title {
+  margin-bottom: 18px;
+  color: rgba(255,255,255,0.9);
+  font-family: var(--display);
+  font-size: 15px;
+  letter-spacing: 1.1px;
+}
+.dashboard-page .chart-title::after,
+.dashboard-page .list-title::after {
+  content: '';
+  width: 34px;
+  height: 2px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #43d2ff, #ed3f9e);
+  box-shadow: 0 0 10px rgba(67,210,255,0.25);
+}
+.dashboard-page .chart-container {
+  height: 270px;
+}
+.dashboard-page .section-divider {
+  height: 1px;
+  margin: 28px 0;
+  background: linear-gradient(90deg, transparent, rgba(67,210,255,0.16), rgba(237,63,158,0.12), transparent);
+}
+.dashboard-page .platform-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 0;
+}
+.dashboard-page .platform-card {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+}
+.dashboard-page .platform-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #43d2ff, #ed3f9e);
+  opacity: 0.56;
+}
+.dashboard-page .platform-title {
+  margin-bottom: 15px;
+  color: rgba(255,255,255,0.92);
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+.dashboard-page .status-bar,
+.dashboard-page .build-bar {
+  height: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.45);
+}
+.dashboard-page .seg-backlog { background: #929bad; }
+.dashboard-page .seg-playing { background: #43d2ff; }
+.dashboard-page .seg-completed { background: #63e6a3; }
+.dashboard-page .seg-abandoned { background: #ed6687; }
+.dashboard-page .status-legend {
+  gap: 10px;
+  color: rgba(255,255,255,0.43);
+  font-size: 10px;
+}
+.dashboard-page .platform-meta {
+  color: rgba(255,255,255,0.45);
+  border-top-color: rgba(255,255,255,0.065);
+}
+
+.dashboard-page .list-row {
+  padding: 12px 3px;
+  border-bottom-color: rgba(255,255,255,0.065);
+  color: rgba(255,255,255,0.7);
+}
+.dashboard-page .list-title-col,
+.dashboard-page .list-row > div:first-child {
+  color: rgba(255,255,255,0.88);
+}
+.dashboard-page .list-meta,
+.dashboard-page .hist-value {
+  color: #50d6ff;
+}
+.dashboard-page .outdated-row {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.dashboard-page .outdated-cover {
+  border-color: rgba(255,255,255,0.11);
+  border-radius: 7px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+}
+.dashboard-page .hist-chart {
+  gap: 10px;
+}
+.dashboard-page .hist-label {
+  color: rgba(255,255,255,0.46);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+.dashboard-page .hist-track {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.045);
+}
+.dashboard-page .hist-fill {
+  border-radius: inherit;
+  background: linear-gradient(90deg, #43d2ff, #7788ff) !important;
+  box-shadow: 0 0 12px rgba(67,210,255,0.18);
+}
+.dashboard-page .hue-gold .hist-fill {
+  background: linear-gradient(90deg, #f0a24a, #ed3f9e) !important;
+}
+.dashboard-page #buildStatusSection > div[style*="grid"] > div {
+  border: 1px solid rgba(255,255,255,0.075);
+  background: rgba(255,255,255,0.035) !important;
+}
+.dashboard-page #buildStatusSection > div[style*="grid"] > div > div:first-child {
+  font-family: var(--display);
+  font-size: 30px !important;
+}
+.dashboard-page #toggleOutdatedBtn,
+.dashboard-page #toggleUnverifiedBtn,
+.dashboard-page #scanMissingFoldersBtn {
+  border-color: rgba(67,210,255,0.2);
+  background: rgba(67,210,255,0.055);
+}
+.dashboard-page #missingFoldersSection {
+  position: relative;
+}
+.dashboard-page #scanMissingFoldersBtn {
+  position: absolute;
+  top: 17px;
+  right: 20px;
+  margin: 0 !important;
+}
+.dashboard-page .dash-ok { color: #63e6a3; }
+.dashboard-page .dash-bad { color: #ed6687; }
+.dashboard-page .save-hint {
+  color: rgba(255,255,255,0.42);
+}
+
+@media (max-width: 1180px) {
+  .dashboard-page .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-page .platform-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-page .charts-grid:has(#topRatedList) { grid-template-columns: 1fr; }
+}
+@media (max-width: 780px) {
+  .dashboard-page .dashboard-container { padding: 22px 18px 55px; }
+  .dashboard-page .dashboard-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .dashboard-page .metrics-grid,
+  .dashboard-page .charts-grid,
+  .dashboard-page .platform-grid {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-page .metric-card { min-height: 128px; }
+  .dashboard-page #scanMissingFoldersBtn {
+    position: static;
+    margin: 0 0 12px !important;
+  }
+}

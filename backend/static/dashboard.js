@@ -1,7 +1,7 @@
 const PLATFORM_LABEL = { gog: 'GOG', steam: 'Steam', ps3: 'PS3', ps4: 'PS4' };
-const PLATFORM_COLORS = { gog: '#ff9500', steam: '#1b9fff', ps3: '#1b5eff', ps4: '#ff1b6d' };
+const PLATFORM_COLORS = { gog: '#f0a24a', steam: '#43d2ff', ps3: '#7788ff', ps4: '#ed3f9e' };
 const STATUS_ORDER = ['backlog', 'playing', 'completed', 'abandoned'];
-const STATUS_COLORS = { backlog: '#ff9500', playing: '#64ff64', completed: '#1b9fff', abandoned: '#aaa' };
+const STATUS_COLORS = { backlog: '#929bad', playing: '#43d2ff', completed: '#63e6a3', abandoned: '#ed6687' };
 
 let charts = {};
 
@@ -82,7 +82,7 @@ function initStatusChart(byStatus) {
     id: 'glassBackground',
     beforeDatasetsDraw(chart) {
       const {ctx: canvasCtx, chartArea: {left, top, width, height}} = chart;
-      canvasCtx.fillStyle = 'rgba(20, 20, 30, 0.3)';
+      canvasCtx.fillStyle = 'rgba(5, 8, 14, 0.18)';
       canvasCtx.fillRect(left, top, width, height);
     }
   };
@@ -93,7 +93,7 @@ function initStatusChart(byStatus) {
       labels: ['Backlog', 'Playing', 'Completed', 'Abandoned'],
       datasets: [{
         data: [byStatus.backlog, byStatus.playing, byStatus.completed, byStatus.abandoned],
-        backgroundColor: ['#ff9500', '#64ff64', '#1b9fff', '#666'],
+        backgroundColor: STATUS_ORDER.map(s => STATUS_COLORS[s]),
         borderColor: 'transparent',
       }]
     },
@@ -103,7 +103,7 @@ function initStatusChart(byStatus) {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: '#aaa', font: { size: 12 }, padding: 16 }
+          labels: { color: '#8f98aa', font: { size: 12 }, padding: 16, usePointStyle: true, pointStyle: 'circle' }
         }
       }
     },
@@ -122,7 +122,7 @@ function initPlatformChart(platforms) {
     id: 'glassBackground',
     beforeDatasetsDraw(chart) {
       const {ctx: canvasCtx, chartArea: {left, top, width, height}} = chart;
-      canvasCtx.fillStyle = 'rgba(20, 20, 30, 0.3)';
+      canvasCtx.fillStyle = 'rgba(5, 8, 14, 0.18)';
       canvasCtx.fillRect(left, top, width, height);
     }
   };
@@ -145,8 +145,8 @@ function initPlatformChart(platforms) {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' } },
-        y: { grid: { display: false }, ticks: { color: '#aaa' } }
+        x: { grid: { color: 'rgba(255,255,255,0.055)' }, ticks: { color: '#8f98aa' }, border: { display: false } },
+        y: { grid: { display: false }, ticks: { color: '#8f98aa' }, border: { display: false } }
       }
     },
     plugins: [plugin]
@@ -189,7 +189,7 @@ function initActivityChart(addedByMonth) {
     id: 'glassBackground',
     beforeDatasetsDraw(chart) {
       const {ctx: canvasCtx, chartArea: {left, top, width, height}} = chart;
-      canvasCtx.fillStyle = 'rgba(20, 20, 30, 0.3)';
+      canvasCtx.fillStyle = 'rgba(5, 8, 14, 0.18)';
       canvasCtx.fillRect(left, top, width, height);
     }
   };
@@ -204,14 +204,14 @@ function initActivityChart(addedByMonth) {
       datasets: [{
         label: 'Games Added',
         data: addedByMonth.map(m => m.count),
-        borderColor: '#64c8ff',
-        backgroundColor: 'rgba(100, 200, 255, 0.1)',
+        borderColor: '#43d2ff',
+        backgroundColor: 'rgba(67, 210, 255, 0.08)',
         borderWidth: 2,
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: '#64c8ff',
-        pointBorderColor: '#000000',
+        pointBackgroundColor: '#ed3f9e',
+        pointBorderColor: '#080b12',
         pointBorderWidth: 2,
       }]
     },
@@ -220,8 +220,8 @@ function initActivityChart(addedByMonth) {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' } },
-        y: { grid: { color: 'rgba(100, 150, 255, 0.1)' }, ticks: { color: '#aaa' }, beginAtZero: true }
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8f98aa' }, border: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8f98aa' }, border: { display: false }, beginAtZero: true }
       }
     },
     plugins: [plugin]
