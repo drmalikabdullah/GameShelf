@@ -2143,3 +2143,123 @@ body.gog-shelf-page::before {
     padding-right: 18px;
   }
 }
+
+/* Settings: immersive glass panel */
+.settings-page .settings-main {
+  width: min(820px, 100%);
+  max-width: none;
+  padding-top: 42px;
+}
+.settings-page .settings-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(25px, 4vw, 42px);
+  border: 1px solid rgba(255,255,255,0.105);
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgba(18,24,35,0.78), rgba(7,10,17,0.72));
+  box-shadow:
+    0 28px 75px rgba(0,0,0,0.42),
+    inset 0 1px rgba(255,255,255,0.065);
+  backdrop-filter: blur(22px) saturate(1.16);
+}
+.settings-page .settings-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #43d2ff, rgba(255,255,255,0.18) 48%, #ed3f9e);
+  box-shadow: 0 0 22px rgba(67,210,255,0.32);
+}
+.settings-page .settings-card h2 {
+  margin: 0 0 10px;
+  color: rgba(255,255,255,0.96);
+  font-size: clamp(24px, 3vw, 32px);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.settings-page .settings-desc {
+  max-width: 690px;
+  margin-bottom: 22px;
+  color: rgba(255,255,255,0.58);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.settings-page .settings-desc a {
+  color: #52d7ff;
+  text-decoration-color: rgba(82,215,255,0.35);
+  text-underline-offset: 3px;
+}
+.settings-page .settings-status {
+  margin-bottom: 23px;
+  padding: 13px 15px;
+  border: 1px solid rgba(255,255,255,0.085);
+  border-left: 3px solid #43d2ff;
+  border-radius: 9px;
+  color: rgba(255,255,255,0.66);
+  background: rgba(255,255,255,0.035);
+  box-shadow: inset 0 1px rgba(255,255,255,0.025);
+}
+.settings-page .field label {
+  margin-bottom: 9px;
+  color: rgba(255,255,255,0.5);
+  font-family: var(--mono);
+  letter-spacing: 1.2px;
+}
+.settings-page #f-key {
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.9);
+  background: rgba(2,5,10,0.5);
+  font-family: var(--mono);
+  font-size: 13px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.settings-page #f-key:focus {
+  outline: none;
+  border-color: rgba(67,210,255,0.62);
+  box-shadow: 0 0 0 3px rgba(67,210,255,0.08), 0 0 22px rgba(67,210,255,0.07);
+}
+.settings-page .settings-actions {
+  gap: 10px;
+  margin-top: 19px;
+  padding-top: 19px;
+  border-top: 1px solid rgba(255,255,255,0.065);
+}
+.settings-page #saveKeyBtn {
+  color: #061018;
+  border-color: transparent;
+  background: linear-gradient(105deg, #44d3fa, #e944a0);
+  box-shadow: 0 10px 28px rgba(66,209,255,0.14);
+}
+.settings-page .delete-btn {
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255,107,131,0.24);
+  border-radius: 10px;
+  color: rgba(255,147,164,0.86);
+  background: rgba(255,75,105,0.07);
+  cursor: pointer;
+}
+.settings-page .delete-btn:hover {
+  color: #fff;
+  border-color: rgba(255,107,131,0.5);
+  background: rgba(255,75,105,0.13);
+}
+.settings-page .save-hint {
+  margin-top: 12px;
+  color: rgba(255,255,255,0.46);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .settings-page .settings-main { padding-top: 24px; }
+  .settings-page .settings-card { padding: 24px 19px; }
+  .settings-page .field > div { flex-wrap: wrap; }
+  .settings-page #f-key { flex-basis: 100% !important; }
+}
