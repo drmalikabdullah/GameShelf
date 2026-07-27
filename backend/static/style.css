@@ -1833,3 +1833,313 @@ a.close-btn { display: inline-block; text-decoration: none; }
   .bp-meta-grid { display: none; }
   .bp-hint span:nth-child(n+3) { display: none; }
 }
+
+/* GOG shelf: match the Immersive Deck visual language */
+body.gog-shelf-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 6%, rgba(52,199,255,0.055), transparent 28%),
+    radial-gradient(circle at 12% 92%, rgba(235,61,157,0.045), transparent 30%),
+    #05070b;
+  color: rgba(246,248,252,0.94);
+  scrollbar-color: rgba(66,209,255,0.35) rgba(255,255,255,0.035);
+  scrollbar-width: thin;
+}
+body.gog-shelf-page ::-webkit-scrollbar { width: 9px; height: 9px; }
+body.gog-shelf-page ::-webkit-scrollbar-track { background: rgba(255,255,255,0.025); }
+body.gog-shelf-page ::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(#43d2ff, #ed3f9e);
+  background-clip: padding-box;
+}
+body.gog-shelf-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.23;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 70%);
+}
+.gog-shelf-page .layout {
+  position: relative;
+  z-index: 1;
+}
+.gog-shelf-page .sidebar {
+  width: 218px;
+  padding: 28px 16px;
+  gap: 7px;
+  background: rgba(7,10,16,0.86);
+  border-right: 1px solid rgba(255,255,255,0.075);
+  box-shadow: 18px 0 55px rgba(0,0,0,0.22);
+  backdrop-filter: blur(22px) saturate(1.15);
+}
+.gog-shelf-page .sidebar-brand {
+  padding: 5px 13px 21px;
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: 2.2px;
+  text-shadow: 0 0 22px rgba(66,207,255,0.35);
+}
+.gog-shelf-page .sidebar-brand::first-letter {
+  color: #42d1ff;
+}
+.gog-shelf-page .sidebar a {
+  padding: 11px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: rgba(255,255,255,0.52);
+  font-size: 13px;
+  letter-spacing: 0.7px;
+}
+.gog-shelf-page .sidebar a:hover:not(.active) {
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.075);
+  background: rgba(255,255,255,0.04);
+}
+.gog-shelf-page .sidebar a.active {
+  color: #fff;
+  border-color: rgba(67,207,255,0.28);
+  background:
+    linear-gradient(100deg, rgba(64,205,255,0.16), rgba(236,62,158,0.1));
+  box-shadow:
+    inset 3px 0 #42d1ff,
+    0 10px 28px rgba(0,0,0,0.18);
+}
+.gog-shelf-page .sidebar-divider {
+  margin: 13px 6px;
+  background: linear-gradient(90deg, rgba(66,209,255,0.2), rgba(255,255,255,0.055), transparent);
+}
+.gog-shelf-page header {
+  padding: 27px 36px 21px;
+  border-bottom: 1px solid rgba(255,255,255,0.075);
+  background: rgba(5,7,11,0.76);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.19);
+  backdrop-filter: blur(24px) saturate(1.2);
+}
+.gog-shelf-page h1 {
+  color: rgba(255,255,255,0.96);
+  font-size: clamp(29px, 2.6vw, 39px);
+  letter-spacing: 0.8px;
+}
+.gog-shelf-page h1 span {
+  color: transparent;
+  background: linear-gradient(90deg, #48d4ff, #f047a4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-shadow: 0 0 25px rgba(65,205,255,0.14);
+}
+.gog-shelf-page .stats {
+  gap: 9px;
+}
+.gog-shelf-page .stats > span,
+.gog-shelf-page .summary-bar > span {
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,0.075);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+}
+.gog-shelf-page .stats b,
+.gog-shelf-page .summary-bar b {
+  color: rgba(255,255,255,0.9);
+}
+.gog-shelf-page .summary-bar {
+  gap: 8px;
+  margin-top: 12px;
+  color: rgba(255,255,255,0.48);
+}
+.gog-shelf-page .controls {
+  gap: 9px;
+  margin-top: 17px;
+}
+.gog-shelf-page input[type="search"],
+.gog-shelf-page select {
+  min-height: 40px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.88);
+  background: rgba(255,255,255,0.045);
+  box-shadow: inset 0 1px rgba(255,255,255,0.035);
+}
+.gog-shelf-page input[type="search"]:focus,
+.gog-shelf-page select:focus {
+  outline: none;
+  border-color: rgba(66,209,255,0.62);
+  box-shadow: 0 0 0 3px rgba(66,209,255,0.08);
+}
+.gog-shelf-page .tabs {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(255,255,255,0.075);
+  border-radius: 11px;
+  background: rgba(255,255,255,0.025);
+}
+.gog-shelf-page .tab {
+  min-height: 32px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.5);
+  background: transparent;
+}
+.gog-shelf-page .tab.active {
+  color: #fff;
+  border: 0;
+  background: rgba(255,255,255,0.075);
+  box-shadow: inset 0 -2px #ed3f9e, 0 5px 18px rgba(0,0,0,0.18);
+}
+.gog-shelf-page .tab:hover:not(.active) {
+  color: rgba(255,255,255,0.82);
+  background: rgba(255,255,255,0.04);
+}
+.gog-shelf-page .close-btn {
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.76);
+  background: rgba(255,255,255,0.045);
+  box-shadow: inset 0 1px rgba(255,255,255,0.035);
+}
+.gog-shelf-page .close-btn:hover {
+  color: #fff;
+  border-color: rgba(66,209,255,0.42);
+  background: rgba(66,209,255,0.075);
+}
+.gog-shelf-page #bigPictureBtn {
+  color: #fff;
+  border-color: rgba(66,209,255,0.38);
+  background: linear-gradient(105deg, rgba(65,205,255,0.16), rgba(236,62,158,0.13));
+  box-shadow: 0 8px 25px rgba(65,205,255,0.08);
+}
+.gog-shelf-page main {
+  padding: 27px 36px 64px;
+}
+.gog-shelf-page .grid {
+  grid-template-columns: repeat(auto-fill, minmax(182px, 1fr));
+  gap: 20px;
+}
+.gog-shelf-page .card {
+  overflow: visible;
+  border: 1px solid rgba(255,255,255,0.085);
+  border-radius: 14px;
+  background: linear-gradient(155deg, rgba(19,24,34,0.76), rgba(9,12,19,0.68));
+  box-shadow:
+    0 18px 44px rgba(0,0,0,0.24),
+    inset 0 1px rgba(255,255,255,0.04);
+  backdrop-filter: blur(15px);
+  transition:
+    transform 0.24s cubic-bezier(0.2,0.8,0.2,1),
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+.gog-shelf-page .card:hover {
+  transform: translateY(-8px) scale(1.012);
+  border-color: rgba(66,209,255,0.43);
+  box-shadow:
+    0 0 0 1px rgba(237,63,158,0.12),
+    0 0 28px rgba(66,209,255,0.11),
+    0 27px 60px rgba(0,0,0,0.46);
+}
+.gog-shelf-page .cover {
+  margin: -1px -1px 0;
+  width: calc(100% + 2px);
+  padding: 5px;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--case-c1, #42d1ff) 45%, rgba(255,255,255,0.16));
+  border-radius: 14px 14px 10px 10px;
+  background:
+    linear-gradient(145deg, rgba(154,225,255,0.19), rgba(16,31,48,0.78) 20%, rgba(4,9,16,0.96));
+  box-shadow:
+    0 14px 35px rgba(0,0,0,0.5),
+    inset 0 0 0 1px rgba(255,255,255,0.12),
+    inset 0 0 22px rgba(66,209,255,0.06);
+}
+.gog-shelf-page .cover::before {
+  inset: 3px;
+  width: auto;
+  z-index: 2;
+  border-radius: 9px;
+  background: linear-gradient(118deg, rgba(255,255,255,0.2), transparent 25%, transparent 72%, rgba(66,209,255,0.07));
+  pointer-events: none;
+}
+.gog-shelf-page .cover::after {
+  top: 0;
+  right: 6px;
+  bottom: 0;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #45d6ff, rgba(255,255,255,0.08) 45%, #ed3f9e);
+  opacity: 0.6;
+  box-shadow: 0 0 9px rgba(66,209,255,0.35);
+}
+.gog-shelf-page .cover-art {
+  z-index: 1;
+  border-radius: 9px;
+  background-color: #090d14;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.13),
+    0 5px 16px rgba(0,0,0,0.34);
+}
+.gog-shelf-page .card-body {
+  padding: 13px 14px 15px;
+  gap: 7px;
+}
+.gog-shelf-page .card-title {
+  color: rgba(255,255,255,0.92);
+  font-size: 18px;
+}
+.gog-shelf-page .card-build,
+.gog-shelf-page .card-meta {
+  color: rgba(255,255,255,0.42);
+}
+.gog-shelf-page .status-dot {
+  border-color: rgba(6,9,14,0.92);
+}
+.gog-shelf-page .stars {
+  color: #43d2ff;
+  text-shadow: 0 0 8px rgba(67,210,255,0.25);
+}
+.gog-shelf-page .status-pill {
+  border: 1px solid rgba(255,255,255,0.075);
+  background: rgba(255,255,255,0.045);
+}
+.gog-shelf-page .overlay {
+  background: rgba(2,4,8,0.82);
+  backdrop-filter: blur(12px);
+}
+.gog-shelf-page .modal {
+  border: 1px solid rgba(255,255,255,0.11);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(15,20,30,0.96), rgba(6,9,15,0.97));
+  box-shadow: 0 35px 90px rgba(0,0,0,0.7), inset 0 1px rgba(255,255,255,0.06);
+}
+.gog-shelf-page .hero-banner {
+  border-radius: 18px 18px 0 0;
+}
+.gog-shelf-page .field select,
+.gog-shelf-page .field textarea,
+.gog-shelf-page .field input[type="text"] {
+  border-color: rgba(255,255,255,0.1);
+  border-radius: 9px;
+  background: rgba(255,255,255,0.045);
+}
+
+@media (max-width: 720px) {
+  .gog-shelf-page .sidebar {
+    width: 100%;
+    padding: 10px 13px;
+    border-right: 0;
+    border-bottom-color: rgba(255,255,255,0.08);
+  }
+  .gog-shelf-page header,
+  .gog-shelf-page main {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
