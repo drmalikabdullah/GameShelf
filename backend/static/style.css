@@ -1565,35 +1565,10 @@ a.close-btn { display: inline-block; text-decoration: none; }
     0 42px 86px rgba(0,0,0,0.76),
     inset 0 0 0 2px rgba(255,255,255,0.2),
     inset 0 0 24px rgba(90,213,255,0.15);
-  -webkit-box-reflect: below 50px linear-gradient(transparent 38%, rgba(105,211,255,0.16));
+  -webkit-box-reflect: below 14px linear-gradient(transparent 48%, rgba(105,211,255,0.14));
 }
 .bp-card.focused::before {
-  content: '•••  SELECTED  •••';
-  top: auto;
-  right: 50%;
-  bottom: -60px;
-  width: 116%;
-  height: 43px;
-  transform: translateX(50%) perspective(240px) rotateX(5deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(89,199,255,0.5);
-  border-radius: 8px 8px 15px 15px;
-  color: #ff4caf;
-  background:
-    linear-gradient(180deg, rgba(27,43,61,0.98), rgba(5,10,17,0.98)),
-    linear-gradient(90deg, #ef3f9d, #42d1ff);
-  box-shadow:
-    0 5px 0 rgba(2,6,11,0.9),
-    0 10px 24px rgba(0,0,0,0.72),
-    0 0 18px rgba(64,205,255,0.28),
-    inset 0 1px rgba(255,255,255,0.2);
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-shadow: 0 0 10px rgba(255,76,175,0.9);
+  display: none;
 }
 .bp-card.focused::after {
   inset: 3px;
