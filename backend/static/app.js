@@ -667,7 +667,7 @@ if (document.getElementById('searchAllBtn')) {
 // connected gamepad's d-pad/stick, the focused game zooms in and shows a
 // Play prompt. Gamepad state has to be polled every frame (there's no
 // "gamepadmoved" event), so this only runs while the overlay is open.
-const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, cardStep: 186, backdropFront: 'A' };
+const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, backdropFront: 'A' };
 
 function bpApplyFilter() {
   let filtered = bp.filter === 'all' ? bp.allGames
@@ -689,14 +689,13 @@ function bpCardHtml(g, i) {
   const cover = g.cover_url ? `background-image:url('${escapeHtml(coverUrl(g))}');` : '';
   const borderColor = caseColorFor(g);
   const d = i - bp.index;
-  let extra = '';
-  if (d !== 0) {
-    const angle = Math.max(-40, Math.min(40, -d * 10));
-    const z = -Math.min(Math.abs(d), 6) * 18;
-    const scale = Math.max(0.66, 0.8 - Math.abs(d) * 0.02);
-    extra = `transform: scale(${scale}) rotateY(${angle}deg) translateZ(${z}px);`;
-  }
-  return `<div class="bp-card ${i === bp.index ? 'focused' : ''}" style="${cover}border:4px solid ${borderColor};${extra}" data-i="${i}"></div>`;
+  const distance = Math.abs(d);
+  const x = d === 0 ? 0 : Math.sign(d) * (205 + Math.max(0, distance - 1) * 112);
+  const angle = d === 0 ? 0 : Math.sign(d) * -12;
+  const visible = distance <= 4;
+  return `<div class="bp-card ${i === bp.index ? 'focused' : ''}" title="${escapeHtml(g.title)}"
+    style="${cover}--case-color:${borderColor};--deck-x:${x}px;--deck-angle:${angle}deg;--deck-depth:${distance};${visible ? '' : 'display:none;'}"
+    data-i="${i}" aria-label="${escapeHtml(g.title)}"></div>`;
 }
 
 function bpUpdateBackdrop(g) {
@@ -720,11 +719,6 @@ function renderBigPictureStage() {
   const stage = document.getElementById('bpStage');
   stage.innerHTML = bp.games.map((g, i) => bpCardHtml(g, i)).join('');
 
-  // Center the focused card: translate by card offset, then by half container width to center
-  const stagePadding = window.innerWidth * 0.5 - 200;
-  const translate = -bp.index * bp.cardStep - stagePadding + window.innerWidth * 0.5;
-  stage.style.transform = `translateX(${translate}px)`;
-
   stage.querySelectorAll('.bp-card').forEach(card => {
     card.addEventListener('click', () => {
       const i = parseInt(card.dataset.i);
@@ -735,57 +729,41 @@ function renderBigPictureStage() {
 
   const g = bp.games[bp.index];
   bpUpdateBackdrop(g);
-  // Set hero image as background on stagewrap
-  const stagewrap = document.getElementById('bpStage').parentElement;
-  if (g && g.hero_url) {
-    stagewrap.style.backgroundImage = `url('${escapeHtml(heroUrl(g))}')`;
-  } else if (g && g.cover_url) {
-    stagewrap.style.backgroundImage = `url('${escapeHtml(coverUrl(g))}')`;
-  } else {
-    stagewrap.style.backgroundImage = 'none';
-  }
-
-  // Add game logo/title overlay on hero background (top-right)
-  const bpOverlay = document.getElementById('bpOverlay');
-  let logoOverlay = document.getElementById('bpLogoOverlay');
-  if (!logoOverlay) {
-    logoOverlay = document.createElement('div');
-    logoOverlay.id = 'bpLogoOverlay';
-    logoOverlay.className = 'bp-logo-overlay';
-    bpOverlay.appendChild(logoOverlay);
-  }
-  if (g) {
-    if (g.logo_url) {
-      // Display official SteamGridDB logo
-      logoOverlay.innerHTML = `<img src="${escapeHtml(g.logo_url)}" alt="${escapeHtml(g.title)} logo" class="bp-logo-image">`;
-    } else {
-      // Fallback to stylized game title text
-      logoOverlay.innerHTML = `<div class="bp-title-overlay-text">${escapeHtml(g.title)}</div>`;
-    }
-    logoOverlay.style.display = 'flex';
-  } else {
-    logoOverlay.style.display = 'none';
-  }
   const info = document.getElementById('bpInfo');
   if (!g) {
     info.innerHTML = '<div class="save-hint">No games on this shelf yet.</div>';
     return;
   }
   const canPlay = !!g.exe_path;
-  const devLine = g.developer ? ` · ${escapeHtml(g.developer)}` : '';
-  const genrePills = g.genres
-    ? `<div class="bp-genres">${g.genres.split(',').map(t => `<span class="bp-genre-pill">${escapeHtml(t.trim())}</span>`).join('')}</div>`
-    : '';
-  info.innerHTML = `
-    <h2>${escapeHtml(g.title)}${g.release_date ? ` <span class="release-year">(${escapeHtml(g.release_date)})</span>` : ''}</h2>
-    <div class="bp-meta">${g.size_human}${g.rating ? ' · ' + starString(g.rating) : ''} · <b>${g.status}</b>${devLine}</div>
-    ${genrePills}
-    <button class="bp-play-btn" id="bpPlayBtn" ${canPlay ? '' : 'disabled'}>${canPlay ? '▶ Play' : 'No executable set'}</button>
-    ${g.platform === 'gog' && g.description ? `<p class="bp-story">${escapeHtml(g.description)}</p>` : ''}
-    ${g.platform === 'gog' ? '<div class="bp-shots" id="bpShots"></div>' : ''}
-  `;
-  document.getElementById('bpPlayBtn').addEventListener('click', bpPlay);
-  if (g.platform === 'gog') loadBpScreenshots(g.id);
+  {
+    const genrePills = g.genres
+      ? `<div class="bp-genres">${g.genres.split(',').map(t => `<span class="bp-genre-pill">${escapeHtml(t.trim())}</span>`).join('')}</div>`
+      : '';
+    const logo = g.logo_url
+      ? `<img src="${escapeHtml(g.logo_url)}" alt="${escapeHtml(g.title)} logo" class="bp-logo-image">`
+      : `<h2 class="bp-title-overlay-text">${escapeHtml(g.title)}</h2>`;
+    info.innerHTML = `
+      <div class="bp-logo-overlay">${logo}</div>
+      <div class="bp-kicker">${escapeHtml(g.title)}${g.release_date ? ` <span>${escapeHtml(g.release_date)}</span>` : ''}</div>
+      ${g.description ? `<p class="bp-story">${escapeHtml(g.description)}</p>` : ''}
+      ${genrePills}
+      <div class="bp-meta-grid">
+        <span><small>Status</small><b>${escapeHtml(g.status)}</b></span>
+        <span><small>Size</small><b>${escapeHtml(g.size_human)}</b></span>
+        ${g.rating ? `<span><small>Rating</small><b>${starString(g.rating)}</b></span>` : ''}
+        ${g.developer ? `<span><small>Developer</small><b>${escapeHtml(g.developer)}</b></span>` : ''}
+      </div>
+      <div class="bp-shots" id="bpShots"></div>
+      <div class="bp-actions">
+        <button class="bp-play-btn" id="bpPlayBtn" ${canPlay ? '' : 'disabled'}>${canPlay ? '▶ Play' : 'No executable set'}</button>
+        <button class="bp-details-btn" id="bpDetailsBtn">Details</button>
+      </div>
+    `;
+    document.getElementById('bpPlayBtn').addEventListener('click', bpPlay);
+    document.getElementById('bpDetailsBtn').addEventListener('click', openBpDetail);
+    loadBpScreenshots(g.id);
+    return;
+  }
 }
 
 let bpShotsAbort = null;
@@ -810,7 +788,10 @@ async function loadBpScreenshots(gameId) {
   if (bp.games[bp.index]?.id !== gameId) return;
   const strip = document.getElementById('bpShots');
   if (!strip || shots.length === 0) return;
-  strip.innerHTML = shots.map(url => `<img src="${escapeHtml(url)}" loading="lazy" alt="">`).join('');
+  strip.innerHTML = shots.map((url, i) => `<img src="${escapeHtml(url)}" loading="lazy" alt="Screenshot ${i + 1}" data-i="${i}">`).join('');
+  strip.querySelectorAll('img').forEach(img => {
+    img.addEventListener('click', () => openBpLightbox(shots, parseInt(img.dataset.i)));
+  });
 }
 
 function bpMove(delta) {
