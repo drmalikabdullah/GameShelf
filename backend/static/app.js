@@ -756,11 +756,9 @@ function renderBigPictureStage() {
       <div class="bp-shots" id="bpShots"></div>
       <div class="bp-actions">
         <button class="bp-play-btn" id="bpPlayBtn" ${canPlay ? '' : 'disabled'}>${canPlay ? '▶ Play' : 'No executable set'}</button>
-        <button class="bp-details-btn" id="bpDetailsBtn">Details</button>
       </div>
     `;
     document.getElementById('bpPlayBtn').addEventListener('click', bpPlay);
-    document.getElementById('bpDetailsBtn').addEventListener('click', openBpDetail);
     loadBpScreenshots(g.id);
     return;
   }
