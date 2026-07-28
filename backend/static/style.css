@@ -1753,7 +1753,7 @@ a.close-btn { display: inline-block; text-decoration: none; }
   justify-content: flex-start;
   gap: 8px;
   min-height: 0;
-  margin: auto 0 15px;
+  margin: 12px 0 15px;
   overflow: hidden;
 }
 .bp-shots img {
@@ -1771,7 +1771,35 @@ a.close-btn { display: inline-block; text-decoration: none; }
   transform: translateY(-3px);
   border-color: rgba(236,62,158,0.7);
 }
+.bp-requirements {
+  min-height: 0;
+  max-height: 120px;
+  margin: 0 0 15px;
+  padding: 11px 13px;
+  overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.035);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(69,216,255,0.55) rgba(255,255,255,0.08);
+}
+.bp-requirements h3 {
+  margin: 0 0 7px;
+  color: #45d8ff;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+.bp-requirements p {
+  margin: 0;
+  color: rgba(255,255,255,0.68);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-line;
+}
 .bp-actions {
+  margin-top: auto;
   display: block;
 }
 .bp-play-btn {
@@ -1835,6 +1863,7 @@ a.close-btn { display: inline-block; text-decoration: none; }
   }
   .bp-logo-overlay { height: 58px; }
   .bp-story { max-height: 90px; }
+  .bp-requirements { max-height: 80px; }
   .bp-genres,
   .bp-meta-grid { display: none; }
   .bp-hint span:nth-child(n+3) { display: none; }

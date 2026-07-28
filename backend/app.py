@@ -108,6 +108,20 @@ if not DB_PATH.exists():
     _init_db.commit()
     _init_db.close()
 
+# Keep existing personal databases compatible when new optional metadata
+# columns are introduced without requiring a destructive database rebuild.
+_migration_db = sqlite3.connect(DB_PATH)
+for _table in ("games", "deleted_games"):
+    _columns = {
+        row[1] for row in _migration_db.execute(f"PRAGMA table_info({_table})")
+    }
+    if "system_requirements" not in _columns:
+        _migration_db.execute(
+            f"ALTER TABLE {_table} ADD COLUMN system_requirements TEXT"
+        )
+_migration_db.commit()
+_migration_db.close()
+
 
 def load_overrides():
     if OVERRIDES_PATH.exists():
@@ -223,22 +237,41 @@ def verify_gog_id(db, game_id, title):
     themselves by clicking stars."""
     real_id, _ = gog_catalog.find_catalog_id(title)
     year, public_rating = gog_catalog.find_release_year_and_rating(real_id) if real_id else (None, None)
-    db.execute("UPDATE games SET gog_catalog_id = ?, release_date = ? WHERE id = ?", (real_id, year, game_id))
+    requirements = gog_catalog.fetch_system_requirements(real_id) if real_id else None
+    db.execute(
+        """UPDATE games
+           SET gog_catalog_id = ?,
+               release_date = ?,
+               system_requirements = COALESCE(?, system_requirements)
+           WHERE id = ?""",
+        (real_id, year, requirements, game_id),
+    )
     if public_rating is not None:
         db.execute("UPDATE games SET rating = ? WHERE id = ? AND rating IS NULL", (public_rating, game_id))
     db.commit()
 
 
 def refresh_steam_release_year(db, game_id, title):
-    """Best-effort release year + review score lookup for a Steam-platform
-    game via Steam's public APIs. Also saves steam_app_id for screenshot fetching."""
+    """Best-effort Steam metadata lookup for a Steam-platform game.
+
+    Saves the app id, release year, review score, and short description used
+    as the story in Big Picture mode.
+    """
     match = steamgriddb.find_steam_appid(title)
-    year, public_rating = None, None
+    year, public_rating, description, requirements = None, None, None, None
     if match:
         year = steamgriddb.fetch_steam_release_year(match["id"])
         public_rating = steamgriddb.fetch_steam_review_score(match["id"])
+        description, requirements = steamgriddb.fetch_steam_description_and_requirements(match["id"])
         db.execute("UPDATE games SET steam_app_id = ? WHERE id = ?", (match["id"], game_id))
-    db.execute("UPDATE games SET release_date = ? WHERE id = ?", (year, game_id))
+    db.execute(
+        """UPDATE games
+           SET release_date = ?,
+               description = COALESCE(?, description),
+               system_requirements = COALESCE(?, system_requirements)
+           WHERE id = ?""",
+        (year, description, requirements, game_id),
+    )
     if public_rating is not None:
         db.execute("UPDATE games SET rating = ? WHERE id = ? AND rating IS NULL", (public_rating, game_id))
     db.commit()
@@ -520,7 +553,8 @@ DELETED_GAMES_LIMIT = 50
 ARCHIVE_COLUMNS = [
     "gog_id", "gog_catalog_id", "platform", "title", "size_bytes", "folder_path",
     "raw_paths", "status", "rating", "notes", "tags", "cover_url", "hero_url",
-    "genres", "description", "developer", "release_date", "added_at", "updated_at",
+    "genres", "description", "system_requirements", "developer", "release_date",
+    "added_at", "updated_at",
 ]
 
 

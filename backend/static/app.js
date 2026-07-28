@@ -754,6 +754,11 @@ function renderBigPictureStage() {
         ${g.developer ? `<span><small>Developer</small><b>${escapeHtml(g.developer)}</b></span>` : ''}
       </div>
       <div class="bp-shots" id="bpShots"></div>
+      ${g.system_requirements ? `
+      <section class="bp-requirements">
+        <h3>System Requirements</h3>
+        <p>${escapeHtml(g.system_requirements)}</p>
+      </section>` : ''}
       <div class="bp-actions">
         <button class="bp-play-btn" id="bpPlayBtn" ${canPlay ? '' : 'disabled'}>${canPlay ? '▶ Play' : 'No executable set'}</button>
       </div>

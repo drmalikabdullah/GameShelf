@@ -9,6 +9,7 @@ Resolved from, in order: STEAMGRIDDB_API_KEY env var, or a local
 steamgriddb_key.txt file next to this script (one line, just the key).
 """
 import json
+import html
 import os
 import re
 import sys
@@ -358,6 +359,60 @@ def fetch_steam_release_year(appid):
     date_str = entry.get("data", {}).get("release_date", {}).get("date", "")
     years = re.findall(r"\d{4}", date_str)
     return years[-1] if years else None
+
+
+def _fetch_steam_store_details(appid):
+    req = urllib.request.Request(
+        f"https://store.steampowered.com/api/appdetails?appids={appid}&cc=US&l=english",
+        headers={"User-Agent": UA},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.load(r)
+    except (urllib.error.HTTPError, urllib.error.URLError):
+        return None
+    entry = data.get(str(appid)) or {}
+    if not entry.get("success"):
+        return None
+    return entry.get("data", {})
+
+
+def _steam_html_to_text(value):
+    if not value:
+        return None
+    value = re.sub(r"(?i)<br\s*/?>|</(?:p|li|ul)>", "\n", value)
+    value = re.sub(r"<[^>]+>", " ", html.unescape(value))
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in value.splitlines()]
+    return "\n".join(line for line in lines if line) or None
+
+
+def fetch_steam_description_and_requirements(appid):
+    """Return clean short description and PC requirements from Steam."""
+    details = _fetch_steam_store_details(appid)
+    if details is None:
+        return None, None
+    description = _steam_html_to_text(details.get("short_description"))
+    requirements = details.get("pc_requirements") or {}
+    minimum = _steam_html_to_text(requirements.get("minimum"))
+    recommended = _steam_html_to_text(requirements.get("recommended"))
+    parts = []
+    if minimum:
+        parts.append(f"Minimum\n{minimum}")
+    if recommended:
+        parts.append(f"Recommended\n{recommended}")
+    return description, "\n\n".join(parts) or None
+
+
+def fetch_steam_description(appid):
+    """Fetch Steam's clean short store description for a known appid."""
+    description, _ = fetch_steam_description_and_requirements(appid)
+    return description
+
+
+def fetch_steam_requirements(appid):
+    """Fetch Steam's clean minimum/recommended PC requirements."""
+    _, requirements = fetch_steam_description_and_requirements(appid)
+    return requirements
 
 
 def find_release_year(title):

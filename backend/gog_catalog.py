@@ -15,6 +15,7 @@ download of the index is the intended way to use their data - not lots of
 small per-title requests - so the index is cached locally and reused.
 """
 import json
+import html
 import re
 import sqlite3
 import sys
@@ -281,3 +282,69 @@ def fetch_story_and_screenshots(catalog_id, max_screenshots=6):
     developers = [d for d in (data.get("developers") or []) if d.strip().upper() != "TEST DEVELOPER"]
     developer = ", ".join(developers) or None
     return description, urls, genres, developer
+
+
+def fetch_system_requirements(catalog_id):
+    """Fetch structured minimum/recommended requirements from GOG's store.
+
+    GOG's compact product API does not expose the detailed requirements,
+    but the public product page embeds them as structured cardProduct JSON.
+    Prefer Windows requirements because GameShelf launches local PC games;
+    fall back to the first available operating system when Windows is absent.
+    """
+    product = _fetch_product(catalog_id)
+    if product is None or not product.get("slug"):
+        return None
+    url = f"https://www.gog.com/en/game/{product['slug']}"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as response:
+            page = response.read().decode("utf-8", errors="replace")
+    except (urllib.error.HTTPError, urllib.error.URLError):
+        return None
+
+    match = re.search(
+        r"cardProduct:\s*(\{.*?\}),\s*cardProductId:",
+        page,
+        re.DOTALL,
+    )
+    if match is None:
+        return None
+    try:
+        card = json.loads(match.group(1))
+    except (json.JSONDecodeError, ValueError):
+        return None
+
+    systems = card.get("supportedOperatingSystems") or []
+    selected = next(
+        (
+            system for system in systems
+            if (system.get("operatingSystem") or {}).get("name") == "windows"
+        ),
+        systems[0] if systems else None,
+    )
+    if selected is None:
+        return None
+
+    sections = []
+    for requirement_type in ("minimum", "recommended"):
+        group = next(
+            (
+                item for item in (selected.get("systemRequirements") or [])
+                if item.get("type") == requirement_type
+            ),
+            None,
+        )
+        if group is None:
+            continue
+        rows = []
+        for item in group.get("requirements") or []:
+            name = html.unescape(item.get("name") or "").strip().rstrip(":")
+            value = _strip_description_html(item.get("description") or "")
+            if value:
+                rows.append(f"{name}: {value}" if name else value)
+        if rows:
+            sections.append(
+                f"{requirement_type.title()}\n" + "\n".join(rows)
+            )
+    return "\n\n".join(sections) or None

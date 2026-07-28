@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS games (
     logo_url      TEXT,                      -- official logo from SteamGridDB
     genres        TEXT,                      -- comma-separated, from enrichment
     description   TEXT,
+    system_requirements TEXT,                -- minimum/recommended PC requirements
     developer     TEXT,                      -- comma-separated, from enrichment
     release_date  TEXT,
     latest_build  TEXT,                      -- newest known build id for this title, from
@@ -79,6 +80,7 @@ CREATE TABLE IF NOT EXISTS deleted_games (
     hero_url      TEXT,
     genres        TEXT,
     description   TEXT,
+    system_requirements TEXT,
     developer     TEXT,
     release_date  TEXT,
     added_at      TEXT,
