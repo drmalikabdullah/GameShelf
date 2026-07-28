@@ -31,6 +31,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
 DIST_DIR = BASE_DIR / "dist"
+APP_DIR = DIST_DIR / "GameShelf"
 
 # Always safe to ship: app code's own runtime needs, none of it personal.
 COMMON_ITEMS = ["schema.sql", "cover_overrides.json"]
@@ -44,7 +45,7 @@ PERSONAL_STATIC_SUBDIRS = {"covers", "heroes", "screenshots"}
 
 def copy_static(fresh):
     src = BASE_DIR / "static"
-    dest = DIST_DIR / "static"
+    dest = APP_DIR / "static"
     if not fresh:
         shutil.copytree(src, dest, dirs_exist_ok=True)
         return
@@ -63,29 +64,22 @@ def main():
     if result.returncode != 0:
         sys.exit("PyInstaller failed - see output above.")
 
-    if not DIST_DIR.exists():
-        sys.exit(f"Expected {DIST_DIR} to exist after build, but it doesn't.")
+    if not APP_DIR.exists():
+        sys.exit(f"Expected {APP_DIR} to exist after build, but it doesn't.")
 
-    print("Copying runtime data files into dist/ ...")
+    print("Copying runtime data files next to GameShelf.exe ...")
     for name in COMMON_ITEMS + ([] if fresh else PERSONAL_ITEMS):
         src = BASE_DIR / name
         if not src.exists():
             print(f"  ! skipping {name} (not found in project folder)")
             continue
-        shutil.copy2(src, DIST_DIR / name)
+        shutil.copy2(src, APP_DIR / name)
         print(f"  copied {name}")
 
     copy_static(fresh)
     print(f"  copied static/{' (without covers/heroes/screenshots)' if fresh else ''}")
 
-    # Also copy static folder into GameShelf subfolder for exe's BASE_DIR detection
-    game_shelf_dir = DIST_DIR / "GameShelf"
-    if game_shelf_dir.exists():
-        game_shelf_static = game_shelf_dir / "static"
-        shutil.copytree(DIST_DIR / "static", game_shelf_static, dirs_exist_ok=True)
-        print(f"  copied static/ into GameShelf/")
-
-    print(f"\nDone. Distribute the whole '{DIST_DIR}' folder - "
+    print(f"\nDone. Distribute the whole '{APP_DIR}' folder - "
           f"double-click GameShelf inside it to run.")
     if fresh:
         print("This is a --fresh build: no games.db, no API key, no cover "

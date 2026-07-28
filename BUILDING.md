@@ -76,20 +76,20 @@ python build.py
 
 This runs PyInstaller against `GameShelf.spec` and copies the runtime data
 files (`games.db`, `static/`, `cover_overrides.json`, `steamgriddb_key.txt`)
-into `dist/` next to the built executable - the app expects those files
-alongside it, so `dist/` is the full, portable app folder.
+into `dist/GameShelf/` next to the built executable. That folder is the
+complete portable app.
 
 ## 3. Run
 
-Double-click `dist/GameShelf` (`GameShelf.exe` on Windows) to launch. Copy
-the entire `dist/` folder to distribute it - the executable alone is not
-enough, since your game library data lives in `games.db` and `static/`
+Double-click `dist/GameShelf/GameShelf.exe` on Windows to launch. Copy the
+entire `dist/GameShelf/` folder to distribute it - the executable alone is
+not enough, since your game library data lives in `games.db` and `static/`
 next to it.
 
 ## Giving a copy to someone else
 
 `python build.py --fresh` builds the same app but leaves your personal data
-out of `dist/`: no `games.db` (a friend gets an empty one, auto-created the
+out of `dist/GameShelf/`: no `games.db` (a friend gets an empty one, auto-created the
 first time they launch it), no `steamgriddb_key.txt` (your API key), and no
 `static/covers`, `static/heroes`, or `static/screenshots` (art tied to your
 game entries). Send them the whole `dist/` folder - they double-click
@@ -102,8 +102,9 @@ steamgriddb.com/api and save it as a `steamgriddb_key.txt` file next to
 
 ## Notes
 
-- Adding a new game, screenshot, or cover art writes into `dist/games.db`
-  and `dist/static/` - back that folder up like you would any other data.
-- Rebuilding overwrites `dist/GameShelf(.exe)` but `build.py` copies your
+- Adding a new game, screenshot, or cover art writes into
+  `dist/GameShelf/games.db` and `dist/GameShelf/static/` - back that folder
+  up like you would any other data.
+- Rebuilding overwrites `dist/GameShelf/GameShelf.exe` but `build.py` copies your
   existing `games.db`/`static/` back in every time, so rebuilds don't wipe
   your library.
