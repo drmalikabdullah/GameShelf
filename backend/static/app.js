@@ -193,110 +193,116 @@ function openModal(idOrGame) {
   if (!g) return;
   state.activeId = g.id;
   const modal = document.getElementById('modal');
+  modal.className = 'modal game-detail-modal';
   modal.innerHTML = `
-    ${g.hero_url ? `<div id="f-hero-banner" class="hero-banner" style="background-image:url('${escapeHtml(heroUrl(g))}')"></div>` : '<div id="f-hero-banner"></div>'}
+    <div id="f-hero-banner" class="detail-hero" ${g.hero_url ? `style="background-image:url('${escapeHtml(heroUrl(g))}')"` : ''}></div>
+    <div class="detail-hero-shade"></div>
+    <button type="button" class="detail-close" onclick="closeModal()" aria-label="Close">✕</button>
 
-    <h2>${escapeHtml(g.title)}${g.release_date ? ` <span class="release-year">(${escapeHtml(g.release_date)})</span>` : ''}</h2>
-    <div class="id-line">${idLineText(g)}</div>
-
-    ${g.cover_url ? `<img id="f-cover-preview" src="${escapeHtml(coverUrl(g))}" style="width:110px;border-radius:6px;margin-bottom:16px;display:block;cursor:crosshair;" title="Click anywhere on this image to use that color for the case">` : '<div id="f-cover-preview"></div>'}
-
-    <div class="field">
-      <label>Case Color <span style="opacity:0.6">(click anywhere on the cover art above to use that color, or pick one below - "A" uses the color detected from the cover art)</span></label>
-      <div class="color-picker" id="colorPicker">
-        <button type="button" class="color-swatch auto-swatch ${!g.case_color_override ? 'active' : ''}" data-color="" style="background:${g.case_color || '#2f8fd4'}" title="Auto (detected from cover art)">A</button>
-        ${PRESET_CASE_COLORS.map(c => `<button type="button" class="color-swatch ${g.case_color_override === c ? 'active' : ''}" data-color="${c}" style="background:${c}" title="${c}"></button>`).join('')}
-        <input type="color" class="color-swatch-custom" id="f-custom-color" value="${g.case_color_override || g.case_color || '#2f8fd4'}" title="Custom color">
+    <div class="detail-identity">
+      ${g.cover_url ? `
+        <div class="detail-cover-frame">
+          <img id="f-cover-preview" src="${escapeHtml(coverUrl(g))}" title="Click anywhere on this cover to use that color for the case">
+        </div>` : '<div id="f-cover-preview"></div>'}
+      <div class="detail-identity-copy">
+        <h2>${escapeHtml(g.title)}${g.release_date ? ` <span class="release-year">(${escapeHtml(g.release_date)})</span>` : ''}</h2>
+        <div class="id-line">${idLineText(g)}</div>
       </div>
     </div>
 
-    <div class="field">
-      <label>Title <span style="opacity:0.6">(or paste a SteamGridDB game URL to fix cover art)</span></label>
-      <input type="text" id="f-title" value="${escapeHtml(g.title)}">
-    </div>
+    <div class="detail-sheet">
+      <div class="detail-columns">
+        <section class="detail-column">
+          <h3>Game Setup</h3>
+          <div class="field">
+            <label>Title <span>(or paste a SteamGridDB URL)</span></label>
+            <input type="text" id="f-title" value="${escapeHtml(g.title)}">
+          </div>
+          ${g.platform === 'gog' ? `
+          <div class="field">
+            <label>Build Version <span>(folder-derived reference)</span></label>
+            <input type="text" id="f-gogid" value="${escapeHtml(g.gog_id || '')}">
+          </div>` : ''}
+          <div class="field">
+            <label>Folder Path <span>(calculates size automatically)</span></label>
+            <div class="detail-input-action">
+              <input type="text" id="f-folderpath" value="${escapeHtml(g.folder_path || '')}" placeholder="e.g. E:\\Games\\Aragami 2">
+              <button type="button" class="close-btn" id="openFolderBtn" ${g.folder_path ? '' : 'disabled'} title="${g.folder_path ? 'Open this folder' : 'No folder linked'}">Open</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Size ${g.folder_path ? '<span>(auto-calculated)</span>' : '<span>(e.g. 25G, 500M, 1.5T)</span>'}</label>
+            <input type="text" id="f-size" value="${escapeHtml(g.size_human)}" ${g.folder_path ? 'readonly' : ''}>
+          </div>
+          <div class="field detail-color-field">
+            <label>Case Color <span>(or click the cover)</span></label>
+            <div class="color-picker" id="colorPicker">
+              <button type="button" class="color-swatch auto-swatch ${!g.case_color_override ? 'active' : ''}" data-color="" style="background:${g.case_color || '#2f8fd4'}" title="Auto (detected from cover art)">A</button>
+              ${PRESET_CASE_COLORS.map(c => `<button type="button" class="color-swatch ${g.case_color_override === c ? 'active' : ''}" data-color="${c}" style="background:${c}" title="${c}"></button>`).join('')}
+              <input type="color" class="color-swatch-custom" id="f-custom-color" value="${g.case_color_override || g.case_color || '#2f8fd4'}" title="Custom color">
+            </div>
+          </div>
+        </section>
 
-    ${g.platform === 'gog' ? `
-    <div class="field">
-      <label>Build Version <span style="opacity:0.6">(your own folder-derived reference number)</span></label>
-      <input type="text" id="f-gogid" value="${escapeHtml(g.gog_id || '')}">
-    </div>
-    ` : ''}
+        <section class="detail-column">
+          <h3>Launch &amp; Progress</h3>
+          ${g.platform === 'gog' || g.platform === 'steam' ? `
+          <div class="field">
+            <label>Executable Path <span>(enables Play)</span></label>
+            <div class="detail-input-action">
+              <input type="text" id="f-exepath" value="${escapeHtml(g.exe_path || '')}" placeholder="e.g. E:\\Games\\Aragami 2\\Aragami2.exe">
+              <button type="button" class="close-btn detail-play-btn" id="playBtn" ${g.exe_path ? '' : 'disabled'} title="${g.exe_path ? 'Launch this game' : 'No executable set'}">▶ Play</button>
+            </div>
+          </div>` : ''}
+          <div class="field">
+            <label>Status</label>
+            <select id="f-status">
+              ${['backlog','playing','completed','abandoned'].map(s =>
+                `<option value="${s}" ${g.status===s?'selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Rating</label>
+            <div class="rating-row" id="f-rating" data-value="${g.rating || 0}">
+              ${[2,4,6,8,10].map(v => `<button data-v="${v}" class="${g.rating >= v ? 'filled':''}">★</button>`).join('')}
+            </div>
+          </div>
+          ${g.developer || g.genres ? `
+          <div class="detail-game-meta">
+            ${g.developer ? `<div class="save-hint">${escapeHtml(g.developer)}</div>` : ''}
+            ${g.genres ? `<div class="genre-pills">${g.genres.split(',').map(t => `<span class="genre-pill">${escapeHtml(t.trim())}</span>`).join('')}</div>` : ''}
+          </div>` : ''}
+        </section>
 
-    <div class="field">
-      <label>Folder Path <span style="opacity:0.6">(size is calculated from this automatically)</span></label>
-      <div style="display:flex; gap:8px;">
-        <input type="text" id="f-folderpath" style="flex:1;" value="${escapeHtml(g.folder_path || '')}" placeholder="e.g. E:\\Games\\Aragami 2">
-        <button type="button" class="close-btn" id="openFolderBtn" ${g.folder_path ? '' : 'disabled'} title="${g.folder_path ? 'Open this folder' : 'No folder linked'}">Open Folder</button>
+        <section class="detail-column detail-personal">
+          <h3>Personal</h3>
+          <div class="field">
+            <label>Tags <span>(comma-separated)</span></label>
+            <input type="text" id="f-tags" value="${escapeHtml(g.tags || '')}" placeholder="rpg, coop, favorite...">
+          </div>
+          <div class="field">
+            <label>Notes</label>
+            <textarea id="f-notes" placeholder="Any notes...">${escapeHtml(g.notes || '')}</textarea>
+          </div>
+          ${g.platform === 'gog' && g.description ? `
+          <div class="field detail-story-field">
+            <label>Story</label>
+            <p class="story-text">${escapeHtml(g.description)}</p>
+          </div>` : ''}
+          ${g.platform === 'gog' ? `
+          <div class="field detail-screenshots-field" id="screenshotsBlock" style="display:none;">
+            <label>Screenshots</label>
+            <div class="screenshot-grid" id="screenshotGrid"></div>
+          </div>` : ''}
+        </section>
       </div>
-    </div>
-
-    <div class="field">
-      <label>Size ${g.folder_path ? '<span style="opacity:0.6">(auto-calculated from Folder Path)</span>' : '<span style="opacity:0.6">(e.g. 25G, 500M, 1.5T)</span>'}</label>
-      <input type="text" id="f-size" value="${escapeHtml(g.size_human)}" ${g.folder_path ? 'readonly' : ''}>
-    </div>
-
-    ${g.platform === 'gog' || g.platform === 'steam' ? `
-    <div class="field">
-      <label>Executable Path <span style="opacity:0.6">(lets the Play button launch the game)</span></label>
-      <div style="display:flex; gap:8px;">
-        <input type="text" id="f-exepath" style="flex:1;" value="${escapeHtml(g.exe_path || '')}" placeholder="e.g. E:\\Games\\Aragami 2\\Aragami2.exe">
-        <button type="button" class="close-btn" id="playBtn" ${g.exe_path ? '' : 'disabled'} title="${g.exe_path ? 'Launch this game' : 'No executable set'}">▶ Play</button>
+      <div class="modal-actions">
+        <span class="save-hint" id="saveHint"></span>
+        <div class="detail-footer-actions">
+          <button class="close-btn" onclick="closeModal()">Done</button>
+          <button class="delete-btn" id="deleteBtn">Delete</button>
+        </div>
       </div>
-    </div>
-    ` : ''}
-
-    <div class="field">
-      <label>Status</label>
-      <select id="f-status">
-        ${['backlog','playing','completed','abandoned'].map(s =>
-          `<option value="${s}" ${g.status===s?'selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}
-      </select>
-    </div>
-
-    <div class="field">
-      <label>Rating</label>
-      <div class="rating-row" id="f-rating" data-value="${g.rating || 0}">
-        ${[2,4,6,8,10].map(v => `<button data-v="${v}" class="${g.rating >= v ? 'filled':''}">★</button>`).join('')}
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Tags <span style="opacity:0.6">(comma-separated)</span></label>
-      <input type="text" id="f-tags" value="${escapeHtml(g.tags || '')}" placeholder="rpg, coop, favorite...">
-    </div>
-
-    <div class="field">
-      <label>Notes</label>
-      <textarea id="f-notes" placeholder="Any notes...">${escapeHtml(g.notes || '')}</textarea>
-    </div>
-
-    ${g.platform === 'gog' && (g.developer || g.genres) ? `
-    <div class="field">
-      ${g.developer ? `<div class="save-hint" style="margin-bottom:6px;">${escapeHtml(g.developer)}</div>` : ''}
-      ${g.genres ? `<div class="genre-pills">${g.genres.split(',').map(t => `<span class="genre-pill">${escapeHtml(t.trim())}</span>`).join('')}</div>` : ''}
-    </div>
-    ` : ''}
-
-    ${g.platform === 'gog' && g.description ? `
-    <div class="field">
-      <label>Story</label>
-      <p class="story-text">${escapeHtml(g.description)}</p>
-    </div>
-    ` : ''}
-
-    ${g.platform === 'gog' ? `
-    <div class="field" id="screenshotsBlock" style="display:none;">
-      <label>Screenshots</label>
-      <div class="screenshot-grid" id="screenshotGrid"></div>
-    </div>
-    ` : ''}
-
-    <div class="modal-actions">
-      <div style="display:flex; gap:10px;">
-        <button class="close-btn" onclick="closeModal()">Done</button>
-        <button class="delete-btn" id="deleteBtn">Delete</button>
-      </div>
-      <span class="save-hint" id="saveHint"></span>
     </div>
   `;
 
@@ -502,6 +508,7 @@ async function deleteGame(id) {
 function openAddModal() {
   state.activeId = null;
   const modal = document.getElementById('modal');
+  modal.className = 'modal';
   modal.innerHTML = `
     <h2>Add Game</h2>
     <div class="field">
@@ -545,6 +552,7 @@ async function submitAddGame() {
 async function openTrashModal() {
   state.activeId = null;
   const modal = document.getElementById('modal');
+  modal.className = 'modal';
   modal.innerHTML = `
     <h2>Trash</h2>
     <div class="save-hint" style="margin-bottom:14px;">Deleted games are kept here until the 50 most recent - restoring brings back all its data and art.</div>
@@ -602,6 +610,7 @@ const PLATFORM_LABEL = { gog: 'GOG', steam: 'Steam', ps3: 'PS3', ps4: 'PS4' };
 function openSearchAllModal() {
   state.activeId = null;
   const modal = document.getElementById('modal');
+  modal.className = 'modal';
   modal.innerHTML = `
     <h2>Search All Shelves</h2>
     <div class="field">
