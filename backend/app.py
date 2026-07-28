@@ -26,6 +26,7 @@ SIZE_RE = re.compile(r'^([\d.]+)\s*([KMGT]?)B?$', re.IGNORECASE)
 UNIT_MULT = {'': 1, 'K': 1024, 'M': 1024**2, 'G': 1024**3, 'T': 1024**4}
 NON_ALNUM_RE = re.compile(r'[^a-z0-9]+')
 PLATFORM_EXPORT_LABEL = {"gog": "GOG", "steam": "Steam", "ps3": "PS3", "ps4": "PS4"}
+VALID_PLATFORMS = set(PLATFORM_EXPORT_LABEL)
 
 
 def normalize_search(text):
@@ -108,17 +109,29 @@ if not DB_PATH.exists():
     _init_db.commit()
     _init_db.close()
 
-# Keep existing personal databases compatible when new optional metadata
-# columns are introduced without requiring a destructive database rebuild.
+def ensure_columns(db, table, columns):
+    """Add optional columns without rebuilding an existing personal database."""
+    existing = {row[1] for row in db.execute(f"PRAGMA table_info({table})")}
+    for name, column_type in columns.items():
+        if name not in existing:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN {name} {column_type}")
+
+
+# Keep existing personal databases compatible when optional metadata columns
+# are introduced. The recycle-bin table deliberately mirrors every editable
+# game field so a restore is lossless.
 _migration_db = sqlite3.connect(DB_PATH)
-for _table in ("games", "deleted_games"):
-    _columns = {
-        row[1] for row in _migration_db.execute(f"PRAGMA table_info({_table})")
-    }
-    if "system_requirements" not in _columns:
-        _migration_db.execute(
-            f"ALTER TABLE {_table} ADD COLUMN system_requirements TEXT"
-        )
+ensure_columns(_migration_db, "games", {
+    "system_requirements": "TEXT",
+})
+ensure_columns(_migration_db, "deleted_games", {
+    "steam_app_id": "TEXT",
+    "exe_path": "TEXT",
+    "logo_url": "TEXT",
+    "case_color": "TEXT",
+    "case_color_override": "TEXT",
+    "system_requirements": "TEXT",
+})
 _migration_db.commit()
 _migration_db.close()
 
@@ -132,11 +145,16 @@ app = Flask(__name__, static_folder=str(BASE_DIR / "static"), static_url_path=""
 
 
 @app.after_request
-def disable_caching(response):
-    """Disable caching for all responses to force fresh file loading."""
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
+def set_cache_policy(response):
+    """Keep code/API responses fresh while allowing local artwork to cache."""
+    if request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+    elif request.path.lower().endswith(
+        (".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg")
+    ):
+        response.headers["Cache-Control"] = "private, max-age=3600"
+    else:
+        response.headers["Cache-Control"] = "no-cache"
     return response
 
 
@@ -174,13 +192,30 @@ def serialize_game(row):
     return d
 
 
+def static_file_from_url(url):
+    """Resolve a local artwork URL without allowing it to escape static/."""
+    if not url:
+        return None
+    static_root = (BASE_DIR / "static").resolve()
+    candidate = (static_root / str(url).lstrip("/\\")).resolve()
+    if candidate == static_root or static_root not in candidate.parents:
+        return None
+    return candidate
+
+
+def unlink_static_url(url):
+    path = static_file_from_url(url)
+    if path is not None:
+        path.unlink(missing_ok=True)
+
+
 def save_cover(db, game_id, data, ext):
     old_cover = db.execute("SELECT cover_url FROM games WHERE id = ?", (game_id,)).fetchone()["cover_url"]
     COVERS_DIR.mkdir(parents=True, exist_ok=True)
     dest = COVERS_DIR / f"{game_id}.{ext}"
     dest.write_bytes(data)
     if old_cover and Path(old_cover).name != dest.name:
-        (BASE_DIR / "static" / Path(old_cover).relative_to("/")).unlink(missing_ok=True)
+        unlink_static_url(old_cover)
 
     color = dominant_color(dest)
     db.execute(
@@ -197,7 +232,7 @@ def save_logo(db, game_id, data, ext):
     dest = LOGOS_DIR / f"{game_id}.{ext}"
     dest.write_bytes(data)
     if old_logo and Path(old_logo).name != dest.name:
-        (BASE_DIR / "static" / Path(old_logo).relative_to("/")).unlink(missing_ok=True)
+        unlink_static_url(old_logo)
 
     db.execute("UPDATE games SET logo_url = ? WHERE id = ?", (f"/logos/{game_id}.{ext}", game_id))
     db.commit()
@@ -209,7 +244,7 @@ def save_hero(db, game_id, data, ext):
     dest = HEROES_DIR / f"{game_id}.{ext}"
     dest.write_bytes(data)
     if old_hero and Path(old_hero).name != dest.name:
-        (BASE_DIR / "static" / Path(old_hero).relative_to("/")).unlink(missing_ok=True)
+        unlink_static_url(old_hero)
 
     db.execute("UPDATE games SET hero_url = ? WHERE id = ?", (f"/heroes/{game_id}.{ext}", game_id))
     db.commit()
@@ -528,6 +563,10 @@ def create_game():
     if not raw_title:
         return jsonify({"error": "title is required"}), 400
     platform = data.get("platform", "gog")
+    if platform not in VALID_PLATFORMS:
+        return jsonify(
+            {"error": f"platform must be one of {sorted(VALID_PLATFORMS)}"}
+        ), 400
 
     cur = db.execute(
         "INSERT INTO games (title, platform, size_bytes, raw_paths) VALUES (?, ?, 0, '[]')",
@@ -551,10 +590,11 @@ def create_game():
 
 DELETED_GAMES_LIMIT = 50
 ARCHIVE_COLUMNS = [
-    "gog_id", "gog_catalog_id", "platform", "title", "size_bytes", "folder_path",
-    "raw_paths", "status", "rating", "notes", "tags", "cover_url", "hero_url",
-    "genres", "description", "system_requirements", "developer", "release_date",
-    "added_at", "updated_at",
+    "gog_id", "gog_catalog_id", "steam_app_id", "platform", "title",
+    "size_bytes", "folder_path", "exe_path", "raw_paths", "status", "rating",
+    "notes", "tags", "cover_url", "hero_url", "logo_url", "genres",
+    "description", "system_requirements", "developer", "release_date",
+    "case_color", "case_color_override", "added_at", "updated_at",
 ]
 
 
@@ -578,13 +618,21 @@ def delete_game(game_id):
     db.commit()
 
     purge_ids = db.execute(
-        "SELECT id, cover_url, hero_url FROM deleted_games ORDER BY deleted_at DESC LIMIT -1 OFFSET ?",
+        """
+        SELECT id, original_id, cover_url, hero_url, logo_url
+        FROM deleted_games
+        ORDER BY deleted_at DESC
+        LIMIT -1 OFFSET ?
+        """,
         (DELETED_GAMES_LIMIT,),
     ).fetchall()
     for purge_row in purge_ids:
-        for url in (purge_row["cover_url"], purge_row["hero_url"]):
-            if url:
-                (BASE_DIR / "static" / Path(url).relative_to("/")).unlink(missing_ok=True)
+        for url in (purge_row["cover_url"], purge_row["hero_url"], purge_row["logo_url"]):
+            unlink_static_url(url)
+        db.execute(
+            "DELETE FROM game_screenshots WHERE game_id = ?",
+            (purge_row["original_id"],),
+        )
         db.execute("DELETE FROM deleted_games WHERE id = ?", (purge_row["id"],))
     db.commit()
 
@@ -609,6 +657,10 @@ def restore_deleted_game(trash_id):
     cur = db.execute(
         f"INSERT INTO games ({', '.join(ARCHIVE_COLUMNS)}) VALUES ({placeholders})",
         [row[c] for c in ARCHIVE_COLUMNS],
+    )
+    db.execute(
+        "UPDATE game_screenshots SET game_id = ? WHERE game_id = ?",
+        (cur.lastrowid, row["original_id"]),
     )
     db.execute("DELETE FROM deleted_games WHERE id = ?", (trash_id,))
     db.commit()

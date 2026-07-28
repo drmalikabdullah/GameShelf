@@ -8,22 +8,6 @@ The Shelf can run two ways:
 
 This document covers the standalone build.
 
-## The 3D Museum view (frontend/)
-
-The "🏛 3D Museum" page is a separate React + Three.js app (`frontend/`,
-its own `package.json`) - not part of the main app's no-build-step static
-files. `build.py` rebuilds it automatically (running `npm install` the
-first time, then `npm run build`) into `static/museum/`, which Flask
-serves at `/museum`. Node.js is only needed on the machine *building* the
-app - the packaged exe never needs it, since only the compiled JS/CSS
-output ships. If Node isn't installed, `build.py` just skips this step and
-prints a warning; everything else still builds normally, the museum page
-just won't be included.
-
-To work on it directly: `npm --prefix frontend install`, then
-`npm --prefix frontend run dev` (proxies API calls to the Flask dev server
-on :5000, so run `python app.py` alongside it).
-
 ## Important: build natively on each OS
 
 PyInstaller does not cross-compile. A build produced on Windows only runs on

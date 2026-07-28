@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS games (
     gog_catalog_id TEXT,                     -- the real GOG catalog product id, looked up from
                                               -- GOG's public catalog by title.
     steam_app_id  TEXT,                      -- Steam app ID for fetching screenshots and metadata
-    platform      TEXT NOT NULL DEFAULT 'gog', -- gog | steam
+    platform      TEXT NOT NULL DEFAULT 'gog', -- gog | steam | ps3 | ps4
     title         TEXT NOT NULL,
     size_bytes    INTEGER DEFAULT 0,
     folder_path   TEXT,                      -- path to the game's install folder on disk; when
@@ -67,10 +67,12 @@ CREATE TABLE IF NOT EXISTS deleted_games (
     original_id   INTEGER,                     -- the game's id before deletion, for reference only
     gog_id        TEXT,
     gog_catalog_id TEXT,
+    steam_app_id  TEXT,
     platform      TEXT,
     title         TEXT,
     size_bytes    INTEGER,
     folder_path   TEXT,
+    exe_path      TEXT,
     raw_paths     TEXT,
     status        TEXT,
     rating        INTEGER,
@@ -78,11 +80,14 @@ CREATE TABLE IF NOT EXISTS deleted_games (
     tags          TEXT,
     cover_url     TEXT,
     hero_url      TEXT,
+    logo_url      TEXT,
     genres        TEXT,
     description   TEXT,
     system_requirements TEXT,
     developer     TEXT,
     release_date  TEXT,
+    case_color    TEXT,
+    case_color_override TEXT,
     added_at      TEXT,
     updated_at    TEXT,
     deleted_at    TEXT DEFAULT (datetime('now'))

@@ -1,5 +1,6 @@
 const PLATFORM = window.APP_PLATFORM || 'gog';
 const state = { status: 'all', q: '', sort: 'title', games: [], activeId: null };
+let coverObserver = null;
 
 const PRESET_CASE_COLORS = [
   '#a85a5a', '#d4823c', '#c9a227', '#5aa968',
@@ -172,7 +173,7 @@ function render() {
     return `
     <div class="card" onclick="openModal(${g.id})">
       <div class="cover" style="${caseVars}">
-        <div class="cover-art" ${g.cover_url ? `style="background-image:url('${escapeHtml(coverUrl(g))}')"` : ''}></div>
+        <div class="cover-art" ${g.cover_url ? `data-cover="${escapeHtml(coverUrl(g))}"` : ''}></div>
       </div>
       <div class="card-body">
         <div class="card-title" title="${escapeHtml(g.title)}"><span class="status-dot ${dot.cls}" title="${escapeHtml(dot.title)}"></span>${(g.platform === 'gog' || g.platform === 'steam') && !g.folder_path ? `<span class="folder-missing" title="No folder linked">⚠️</span>` : ''}${escapeHtml(g.title)}${g.release_date ? ` <span class="release-year">(${escapeHtml(g.release_date)})</span>` : ''}</div>
@@ -186,6 +187,7 @@ function render() {
     </div>
   `;
   }).join('');
+  observeCoverBackgrounds(grid);
 }
 
 function openModal(idOrGame) {
@@ -416,6 +418,30 @@ async function loadScreenshots(gameId) {
     button.addEventListener('click', () => openScreenshotLightbox(shots, Number(button.dataset.index)));
   });
   block.style.display = '';
+}
+
+function loadCoverBackground(element) {
+  const url = element.dataset.cover;
+  if (!url) return;
+  element.style.backgroundImage = `url("${url.replaceAll('"', '\\"')}")`;
+  delete element.dataset.cover;
+}
+
+function observeCoverBackgrounds(container) {
+  if (coverObserver) coverObserver.disconnect();
+  const covers = container.querySelectorAll('.cover-art[data-cover]');
+  if (!('IntersectionObserver' in window)) {
+    covers.forEach(loadCoverBackground);
+    return;
+  }
+  coverObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      loadCoverBackground(entry.target);
+      coverObserver.unobserve(entry.target);
+    });
+  }, { rootMargin: '500px 0px' });
+  covers.forEach(cover => coverObserver.observe(cover));
 }
 
 const screenshotLightbox = { shots: [], index: 0 };
@@ -1094,9 +1120,11 @@ document.getElementById('overlay').addEventListener('click', e => {
 });
 document.addEventListener('keydown', screenshotLightboxKeydown);
 
+let searchTimer = null;
 document.getElementById('search').addEventListener('input', e => {
   state.q = e.target.value;
-  fetchGames();
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(fetchGames, 180);
 });
 
 document.getElementById('sort').addEventListener('change', e => {
@@ -1115,27 +1143,3 @@ document.querySelectorAll('.tab').forEach(tab => {
 
 fetchGames();
 fetchStats();
-
-// Remove the 3D Museum link and label
-(function removeMuseum() {
-  document.querySelectorAll('a[href*="/museum"]').forEach(link => {
-    console.log('Removing museum link:', link.outerHTML);
-    link.remove();
-  });
-  const label = document.getElementById('bpMuseumLabel');
-  if (label) {
-    console.log('Removing museum label');
-    label.remove();
-  }
-})();
-
-// Force hide backdrops - remove those light circles
-(function hideBackdrops() {
-  const style = document.createElement('style');
-  style.textContent = `
-    #bpBackdropA { display: none !important; }
-    #bpBackdropB { display: none !important; }
-    .bp-backdrop-scrim { display: none !important; }
-  `;
-  document.head.appendChild(style);
-})();

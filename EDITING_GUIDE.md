@@ -1,109 +1,65 @@
-# Which File to Edit for What?
+# GameShelf Editing Guide
 
-## Editing the 3D Scene
+All work must be performed in `E:\Projects\GameShelf`. The active application
+is entirely under `backend\`; the Flask server does not serve files from a
+root-level `static` directory.
 
-**File: `frontend/src/components/scene/CoverCard.tsx`**
-- Change scale steps (currently 1.0 → 0.82 → 0.70 → 0.55)
-- Change rotation angles (currently 0° → 10° → 14° → 18°)
-- Adjust carousel arc radius & speed
-- Modify opacity/brightness of non-focused covers
+## Shelf and Big Picture interface
 
-**File: `frontend/src/components/scene/Lighting.tsx`**
-- Adjust light positions, colors, intensities
-- Add/remove lights
-- Change shadow settings
+- `backend/static/app.js` — shelf rendering, game details, screenshot
+  lightboxes, Big Picture behavior, keyboard and gamepad controls.
+- `backend/static/style.css` — all shelf, modal, theme, and Big Picture
+  styling.
+- `backend/static/index.html` — GOG shelf.
+- `backend/static/steam.html` — Steam shelf.
+- `backend/static/ps3.html` — PS3 shelf.
+- `backend/static/ps4.html` — PS4 shelf.
 
-**File: `frontend/src/components/scene/PostFX.tsx`**
-- Enable/disable depth-of-field blur
-- Adjust blur amount & focus distance
-- Add bloom, vignette, color grading, etc.
+The four shelf pages share `app.js` and `style.css`. Make behavior changes in
+those shared files unless the change truly applies to only one platform.
 
-## Editing the UI Overlay
+## Dashboard and settings
 
-**File: `frontend/src/components/ui/Overlay.tsx`**
-- Change title, metadata, button styling
-- Add/remove buttons or sections
-- Adjust keyboard hints text
+- `backend/static/dashboard.html` and `dashboard.js` — statistics, build
+  status, game lists, and missing-folder checks.
+- `backend/static/settings.html` and `settings.js` — SteamGridDB key and
+  appearance controls.
+- `backend/static/theme.js` — theme persistence and application.
 
-## Editing Global Styles
+## Backend and database
 
-**File: `frontend/src/index.css`**
-- Change background color (currently `#05050a` = almost black)
-- Change text colors, fonts
-- Add gradients or patterns to the DOM background (not the 3D canvas)
+- `backend/app.py` — Flask routes, validation, database access, game launch,
+  folder opening, recycle bin, dashboard APIs, and exports.
+- `backend/schema.sql` — schema used for a new database.
+- `backend/tests/` — regression tests for backend behavior.
+- `backend/steamgriddb.py` and `backend/gog_catalog.py` — external metadata
+  and artwork integrations.
+- `backend/enrich_*.py` — one-time or maintenance enrichment scripts.
 
-## Editing the Carousel Logic
+When a schema change is optional metadata, add both the new-database column to
+`schema.sql` and a non-destructive migration in `app.py`.
 
-**File: `frontend/src/hooks/useCarouselFocus.ts`**
-- Change spring animation stiffness/damping (smoothness of transitions)
-- Adjust initial cover index
-- Change movement behavior (arrow key increments, etc.)
+## Desktop build
 
-**File: `frontend/src/components/Museum.tsx`**
-- Change camera position/FOV
-- Add/remove 3D scene elements
-- Modify canvas rendering settings
+- `backend/launcher.py` — native pywebview window and local server lifecycle.
+- `backend/GameShelf.spec` — PyInstaller entry point and windowed settings.
+- `backend/build.py` — build orchestration and runtime-data copying.
+- `BUILDING.md` — user-facing build and distribution instructions.
 
-## Editing API / Data Fetching
+Do not edit generated files in `backend/build` or `backend/dist`.
 
-**File: `frontend/src/api.ts`**
-- Change which API endpoints are called
-- Modify URL query parameters
-- Update cache/refresh logic
+## Verification
 
-**File: `frontend/src/App.tsx`**
-- Change how games are fetched from `/api/games`
-- Add error handling
-- Modify keyboard shortcuts (arrows, escape)
+From `E:\Projects\GameShelf\backend`:
 
-## Editing Backend
+```powershell
+python -m unittest discover -s tests -v
+python -m compileall -q .
+node --check static/app.js
+node --check static/dashboard.js
+node --check static/settings.js
+node --check static/theme.js
+```
 
-**File: `backend/app.py`**
-- Add/modify Flask routes
-- Change database queries
-- Adjust API response structure
-- Modify `/museum` route behavior
-
-**File: `backend/schema.sql`**
-- Add columns to games table
-- Change data types
-- Add new tables
-
-**File: `backend/gog_catalog.py`**
-- Modify how cover art is fetched from GOG
-- Add caching logic
-
-**File: `backend/build.py`**
-- Change PyInstaller settings (to include/exclude files)
-- Modify `--fresh` build behavior
-
-## Editing Build Configuration
-
-**File: `frontend/vite.config.ts`**
-- Change output folder
-- Adjust dev server proxy settings
-- Modify build optimization
-
-**File: `frontend/tsconfig.json`**
-- Change TypeScript strictness
-- Add path aliases
-
-**File: `package.json`**
-- Add/remove npm dependencies
-- Change build scripts
-
-## Quick Reference by Feature
-
-| Feature | File |
-|---------|------|
-| Scale sizes | `CoverCard.tsx` line 15-20 |
-| Rotation angles | `CoverCard.tsx` line 41-46 |
-| Opacity/brightness | `CoverCard.tsx` line 98-109 |
-| Light colors | `Lighting.tsx` |
-| Blur effect | `PostFX.tsx` |
-| Background color | `index.css` line 6 |
-| Title & HUD | `Overlay.tsx` |
-| Spring smoothness | `useCarouselFocus.ts` line 16-21 |
-| API endpoint | `api.ts` |
-| Keyboard controls | `App.tsx` line 27-33 |
-| Backend routes | `app.py` |
+Run the development server from the same directory and verify that its
+`app.static_folder` resolves to `E:\Projects\GameShelf\backend\static`.

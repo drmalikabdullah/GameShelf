@@ -37,7 +37,7 @@ Then open **http://127.0.0.1:5000** in your browser.
 - Enrichers: `enrich.py`, `enrich_steamgriddb.py`, `enrich_story.py`, `steamgriddb.py`, `gog_catalog.py`
 - Utilities: `build.py` (compile to .exe), `launcher.py`, `check_latest_builds.py`, etc.
 
-**Frontend** (`static/`):
+**Frontend** (`backend/static/`):
 - `index.html`, `dashboard.html` — Web UI pages
 - `app.js`, `dashboard.js` — JavaScript logic
 - `style.css` — Styling
