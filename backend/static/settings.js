@@ -4,6 +4,26 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
+function renderThemeSelection() {
+  const activeTheme = window.GameShelfTheme?.get() || 'dark';
+  document.querySelectorAll('.theme-option').forEach(option => {
+    const active = option.dataset.theme === activeTheme;
+    option.classList.toggle('active', active);
+    option.setAttribute('aria-pressed', String(active));
+  });
+}
+
+document.querySelectorAll('.theme-option').forEach(option => {
+  option.addEventListener('click', () => {
+    const selected = window.GameShelfTheme.set(option.dataset.theme);
+    renderThemeSelection();
+    const label = option.querySelector('b')?.textContent || selected;
+    document.getElementById('themeHint').textContent = `${label} theme applied ✓`;
+  });
+});
+
+renderThemeSelection();
+
 async function loadKeyStatus() {
   const status = document.getElementById('keyStatus');
   const res = await fetch('/api/settings/steamgriddb_key');

@@ -17,6 +17,69 @@
   --display: 'Barlow Condensed', sans-serif;
   --body: 'Inter', sans-serif;
   --mono: 'JetBrains Mono', monospace;
+  --header-bg: rgba(20,22,31,0.92);
+  --page-glow-a: rgba(201,162,39,0.05);
+  --page-glow-b: rgba(74,154,160,0.05);
+}
+
+[data-theme="light"] {
+  --bg: #ece9e1;
+  --surface: #f8f6f1;
+  --surface-hi: #e4e0d7;
+  --border: #cbc4b7;
+  --text: #23262d;
+  --muted: #6f716f;
+  --gold: #9c7310;
+  --gold-dim: #c1a04c;
+  --teal: #267c83;
+  --green: #3d8951;
+  --red: #a04747;
+  --yellow: #aa821c;
+  --purple: #7651b0;
+  --grey: #8b8e95;
+  --header-bg: rgba(248,246,241,0.92);
+  --page-glow-a: rgba(156,115,16,0.12);
+  --page-glow-b: rgba(38,124,131,0.1);
+}
+
+[data-theme="midnight"] {
+  --bg: #070b18;
+  --surface: #0e1528;
+  --surface-hi: #17213a;
+  --border: #283451;
+  --text: #edf3ff;
+  --muted: #8491ac;
+  --gold: #6fb8ff;
+  --gold-dim: #356caa;
+  --teal: #5bd7dc;
+  --green: #65c88d;
+  --red: #df7181;
+  --yellow: #d9b95c;
+  --purple: #8c7be8;
+  --grey: #53617e;
+  --header-bg: rgba(7,11,24,0.92);
+  --page-glow-a: rgba(76,132,255,0.14);
+  --page-glow-b: rgba(91,215,220,0.08);
+}
+
+[data-theme="forest"] {
+  --bg: #101713;
+  --surface: #18221c;
+  --surface-hi: #223027;
+  --border: #33443a;
+  --text: #ece9dd;
+  --muted: #99a49a;
+  --gold: #c59a55;
+  --gold-dim: #765d38;
+  --teal: #5a9c8d;
+  --green: #70a76e;
+  --red: #b2685e;
+  --yellow: #c1a057;
+  --purple: #8c74ad;
+  --grey: #637069;
+  --header-bg: rgba(16,23,19,0.92);
+  --page-glow-a: rgba(197,154,85,0.1);
+  --page-glow-b: rgba(90,156,141,0.08);
 }
 
 * { box-sizing: border-box; }
@@ -25,8 +88,8 @@ body {
   margin: 0;
   background: var(--bg);
   background-image:
-    radial-gradient(circle at 15% 0%, rgba(201,162,39,0.05), transparent 40%),
-    radial-gradient(circle at 85% 20%, rgba(74,154,160,0.05), transparent 40%);
+    radial-gradient(circle at 15% 0%, var(--page-glow-a), transparent 40%),
+    radial-gradient(circle at 85% 20%, var(--page-glow-b), transparent 40%);
   color: var(--text);
   font-family: var(--body);
   -webkit-font-smoothing: antialiased;
@@ -85,7 +148,7 @@ header {
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  background: rgba(20,22,31,0.92);
+  background: var(--header-bg);
   backdrop-filter: blur(8px);
   z-index: 10;
 }
@@ -2674,6 +2737,221 @@ body.gog-shelf-page::before {
   outline: none;
   border-color: rgba(67,210,255,0.62);
   box-shadow: 0 0 0 3px rgba(67,210,255,0.08), 0 0 22px rgba(67,210,255,0.07);
+}
+
+/* Appearance selector */
+.appearance-card {
+  margin-bottom: 22px;
+}
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: var(--text);
+  text-align: left;
+  background: rgba(255,255,255,0.035);
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.theme-option:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--gold) 65%, transparent);
+  background: rgba(255,255,255,0.06);
+}
+.theme-option.active {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 13%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 13%, transparent);
+}
+.theme-option > span:last-child {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.theme-option b {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.4px;
+}
+.theme-option small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.theme-preview {
+  width: 64px;
+  height: 43px;
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  grid-template-rows: 12px 1fr;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.theme-preview i {
+  display: block;
+  border-radius: 2px;
+}
+.theme-preview i:first-child {
+  grid-row: 1 / 3;
+}
+.theme-preview-dark { background: #14161f; }
+.theme-preview-dark i { background: #242838; }
+.theme-preview-dark i:nth-child(2) { background: #c9a227; }
+.theme-preview-light { background: #ece9e1; }
+.theme-preview-light i { background: #f8f6f1; }
+.theme-preview-light i:nth-child(2) { background: #9c7310; }
+.theme-preview-midnight { background: #070b18; }
+.theme-preview-midnight i { background: #17213a; }
+.theme-preview-midnight i:nth-child(2) { background: #6fb8ff; }
+.theme-preview-forest { background: #101713; }
+.theme-preview-forest i { background: #223027; }
+.theme-preview-forest i:nth-child(2) { background: #c59a55; }
+
+/* Theme the newer immersive shelf skin, which intentionally uses fixed colors. */
+[data-theme="light"] body.gog-shelf-page {
+  color: var(--text);
+  background:
+    radial-gradient(circle at 82% 6%, rgba(38,124,131,0.1), transparent 28%),
+    radial-gradient(circle at 12% 92%, rgba(156,115,16,0.08), transparent 30%),
+    var(--bg);
+  scrollbar-color: rgba(156,115,16,0.45) rgba(0,0,0,0.04);
+}
+[data-theme="light"] body.gog-shelf-page::before {
+  opacity: 0.14;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.045) 1px, transparent 1px);
+}
+[data-theme="light"] .gog-shelf-page .sidebar,
+[data-theme="light"] .gog-shelf-page header {
+  border-color: rgba(40,35,28,0.12);
+  background: rgba(248,246,241,0.88);
+  box-shadow: 18px 0 55px rgba(50,43,32,0.08);
+}
+[data-theme="light"] .gog-shelf-page .sidebar-brand,
+[data-theme="light"] .gog-shelf-page h1,
+[data-theme="light"] .gog-shelf-page .stats b,
+[data-theme="light"] .gog-shelf-page .summary-bar b,
+[data-theme="light"] .gog-shelf-page .card-title {
+  color: var(--text);
+  text-shadow: none;
+}
+[data-theme="light"] .gog-shelf-page h1 span {
+  background: linear-gradient(90deg, #267c83, #9c7310);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+[data-theme="light"] .gog-shelf-page .sidebar a,
+[data-theme="light"] .gog-shelf-page .tab,
+[data-theme="light"] .gog-shelf-page .summary-bar,
+[data-theme="light"] .gog-shelf-page .card-build,
+[data-theme="light"] .gog-shelf-page .card-meta {
+  color: var(--muted);
+}
+[data-theme="light"] .gog-shelf-page .sidebar a:hover:not(.active),
+[data-theme="light"] .gog-shelf-page .tab:hover:not(.active) {
+  color: var(--text);
+  border-color: rgba(40,35,28,0.12);
+  background: rgba(0,0,0,0.045);
+}
+[data-theme="light"] .gog-shelf-page .sidebar a.active,
+[data-theme="light"] .gog-shelf-page .tab.active {
+  color: #fff;
+  border-color: rgba(38,124,131,0.3);
+  background: linear-gradient(100deg, #267c83, #9c7310);
+  box-shadow: none;
+}
+[data-theme="light"] .gog-shelf-page .stats > span,
+[data-theme="light"] .gog-shelf-page .summary-bar > span,
+[data-theme="light"] .gog-shelf-page .tabs,
+[data-theme="light"] .gog-shelf-page input[type="search"],
+[data-theme="light"] .gog-shelf-page select,
+[data-theme="light"] .gog-shelf-page .close-btn {
+  color: var(--text);
+  border-color: rgba(40,35,28,0.13);
+  background: rgba(255,255,255,0.58);
+}
+[data-theme="light"] .gog-shelf-page .card {
+  border-color: rgba(40,35,28,0.13);
+  background: linear-gradient(155deg, rgba(255,255,255,0.84), rgba(231,226,215,0.78));
+  box-shadow: 0 18px 44px rgba(58,49,37,0.12), inset 0 1px rgba(255,255,255,0.8);
+}
+[data-theme="light"] .gog-shelf-page .card:hover {
+  border-color: rgba(38,124,131,0.5);
+  box-shadow: 0 24px 55px rgba(58,49,37,0.2);
+}
+[data-theme="light"] .settings-page .settings-card {
+  border-color: rgba(40,35,28,0.13);
+  background: rgba(255,255,255,0.7);
+  box-shadow: 0 28px 75px rgba(58,49,37,0.14);
+}
+[data-theme="light"] .settings-page .settings-card h2,
+[data-theme="light"] .settings-page .settings-desc,
+[data-theme="light"] .settings-page .field label,
+[data-theme="light"] .settings-page .settings-status,
+[data-theme="light"] .settings-page #f-key {
+  color: var(--text);
+}
+[data-theme="light"] .settings-page #f-key,
+[data-theme="light"] .settings-page .settings-status,
+[data-theme="light"] .theme-option {
+  border-color: rgba(40,35,28,0.14);
+  background: rgba(255,255,255,0.65);
+}
+[data-theme="light"] .layout,
+[data-theme="light"] .dashboard-container {
+  background: var(--bg) !important;
+}
+[data-theme="light"] .dashboard-title,
+[data-theme="light"] .metric-card {
+  color: var(--text) !important;
+}
+[data-theme="light"] .metric-card {
+  border-color: rgba(40,35,28,0.13) !important;
+  background: rgba(255,255,255,0.62) !important;
+  box-shadow: 0 10px 32px rgba(58,49,37,0.12) !important;
+}
+[data-theme="light"] .metric-label {
+  color: var(--muted) !important;
+}
+
+[data-theme="forest"] body.gog-shelf-page {
+  background:
+    radial-gradient(circle at 82% 6%, rgba(90,156,141,0.08), transparent 28%),
+    radial-gradient(circle at 12% 92%, rgba(197,154,85,0.08), transparent 30%),
+    var(--bg);
+}
+[data-theme="forest"] .gog-shelf-page h1 span {
+  background: linear-gradient(90deg, #70a76e, #c59a55);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+[data-theme="forest"] .gog-shelf-page .sidebar a.active {
+  border-color: rgba(197,154,85,0.32);
+  background: linear-gradient(100deg, rgba(112,167,110,0.18), rgba(197,154,85,0.14));
+  box-shadow: inset 3px 0 #c59a55, 0 10px 28px rgba(0,0,0,0.18);
+}
+[data-theme="forest"] .gog-shelf-page .stars {
+  color: #c59a55;
+  text-shadow: 0 0 8px rgba(197,154,85,0.25);
+}
+
+@media (max-width: 620px) {
+  .theme-options {
+    grid-template-columns: 1fr;
+  }
 }
 .settings-page .settings-actions {
   gap: 10px;

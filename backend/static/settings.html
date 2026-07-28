@@ -6,6 +6,7 @@
   <title>GameShelf Settings</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="/theme.js"></script>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body class="gog-shelf-page settings-page">
@@ -30,6 +31,30 @@
     </header>
 
     <main class="settings-main">
+      <div class="settings-card appearance-card">
+        <h2>Appearance</h2>
+        <p class="settings-desc">Choose how GameShelf looks. Your selection is saved automatically and used on every shelf.</p>
+        <div class="theme-options" id="themeOptions">
+          <button type="button" class="theme-option" data-theme="dark">
+            <span class="theme-preview theme-preview-dark"><i></i><i></i><i></i></span>
+            <span><b>Dark</b><small>Current classic look</small></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="light">
+            <span class="theme-preview theme-preview-light"><i></i><i></i><i></i></span>
+            <span><b>Light</b><small>Clean and bright</small></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="midnight">
+            <span class="theme-preview theme-preview-midnight"><i></i><i></i><i></i></span>
+            <span><b>Midnight</b><small>Deep blue cinema</small></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="forest">
+            <span class="theme-preview theme-preview-forest"><i></i><i></i><i></i></span>
+            <span><b>Forest</b><small>Muted green and bronze</small></span>
+          </button>
+        </div>
+        <div class="save-hint" id="themeHint"></div>
+      </div>
+
       <div class="settings-card">
         <h2>SteamGridDB API Key</h2>
         <p class="settings-desc">
