@@ -514,6 +514,15 @@ main {
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
+.screenshot-thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+}
 .screenshot-grid img {
   width: 100%;
   aspect-ratio: 16/9;
@@ -527,6 +536,107 @@ main {
 .screenshot-grid img:hover {
   transform: translateY(-2px);
   border-color: var(--gold-dim);
+}
+
+.screenshot-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 90px;
+  background: rgba(2, 3, 6, 0.96);
+  backdrop-filter: blur(14px);
+}
+.screenshot-lightbox.open {
+  display: flex;
+}
+.screenshot-lightbox-image {
+  max-width: min(1500px, 92vw);
+  max-height: calc(100vh - 130px);
+  object-fit: contain;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 10px;
+  box-shadow: 0 36px 100px rgba(0,0,0,0.78);
+}
+.screenshot-lightbox-close,
+.screenshot-lightbox-nav {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(15,18,25,0.74);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.screenshot-lightbox-close:hover,
+.screenshot-lightbox-nav:hover {
+  border-color: rgba(222,197,127,0.82);
+  background: rgba(30,34,44,0.95);
+}
+.screenshot-lightbox-close {
+  top: 24px;
+  right: 28px;
+  width: 44px;
+  height: 44px;
+  font-size: 17px;
+}
+.screenshot-lightbox-nav {
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  transform: translateY(-50%);
+  font-size: 42px;
+  font-weight: 200;
+  line-height: 1;
+}
+.screenshot-lightbox-nav:hover {
+  transform: translateY(-50%) scale(1.06);
+}
+.screenshot-lightbox-prev {
+  left: 24px;
+}
+.screenshot-lightbox-next {
+  right: 24px;
+}
+.screenshot-lightbox-count {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 13px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  color: rgba(255,255,255,0.76);
+  background: rgba(15,18,25,0.72);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.8px;
+}
+@media (max-width: 700px) {
+  .screenshot-lightbox {
+    padding: 68px 18px;
+  }
+  .screenshot-lightbox-nav {
+    top: auto;
+    bottom: 18px;
+    width: 44px;
+    height: 44px;
+  }
+  .screenshot-lightbox-prev {
+    left: 20px;
+  }
+  .screenshot-lightbox-next {
+    right: 20px;
+  }
+  .screenshot-lightbox-count {
+    bottom: 25px;
+  }
 }
 
 .rating-row { display: flex; gap: 4px; }

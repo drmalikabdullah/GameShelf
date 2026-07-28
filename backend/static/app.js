@@ -407,12 +407,88 @@ async function loadScreenshots(gameId) {
   const block = document.getElementById('screenshotsBlock');
   const grid = document.getElementById('screenshotGrid');
   if (!block || !grid) return; // modal moved on before this resolved
-  grid.innerHTML = shots.map(url => `
-    <a href="${escapeHtml(url)}" target="_blank" rel="noopener">
-      <img src="${escapeHtml(url)}" loading="lazy" alt="Screenshot">
-    </a>
+  grid.innerHTML = shots.map((url, index) => `
+    <button type="button" class="screenshot-thumb" data-index="${index}" aria-label="Open screenshot ${index + 1} of ${shots.length}">
+      <img src="${escapeHtml(url)}" loading="lazy" alt="Screenshot ${index + 1}">
+    </button>
   `).join('');
+  grid.querySelectorAll('.screenshot-thumb').forEach(button => {
+    button.addEventListener('click', () => openScreenshotLightbox(shots, Number(button.dataset.index)));
+  });
   block.style.display = '';
+}
+
+const screenshotLightbox = { shots: [], index: 0 };
+
+function ensureScreenshotLightbox() {
+  let lightbox = document.getElementById('screenshotLightbox');
+  if (lightbox) return lightbox;
+  lightbox = document.createElement('div');
+  lightbox.className = 'screenshot-lightbox';
+  lightbox.id = 'screenshotLightbox';
+  lightbox.setAttribute('role', 'dialog');
+  lightbox.setAttribute('aria-modal', 'true');
+  lightbox.setAttribute('aria-label', 'Screenshot viewer');
+  lightbox.innerHTML = `
+    <button type="button" class="screenshot-lightbox-close" aria-label="Close screenshot viewer">✕</button>
+    <button type="button" class="screenshot-lightbox-nav screenshot-lightbox-prev" aria-label="Previous screenshot">‹</button>
+    <img class="screenshot-lightbox-image" alt="Game screenshot">
+    <button type="button" class="screenshot-lightbox-nav screenshot-lightbox-next" aria-label="Next screenshot">›</button>
+    <div class="screenshot-lightbox-count" aria-live="polite"></div>
+  `;
+  lightbox.querySelector('.screenshot-lightbox-close').addEventListener('click', closeScreenshotLightbox);
+  lightbox.querySelector('.screenshot-lightbox-prev').addEventListener('click', () => navigateScreenshotLightbox(-1));
+  lightbox.querySelector('.screenshot-lightbox-next').addEventListener('click', () => navigateScreenshotLightbox(1));
+  lightbox.addEventListener('click', event => {
+    if (event.target === lightbox) closeScreenshotLightbox();
+  });
+  document.body.appendChild(lightbox);
+  return lightbox;
+}
+
+function openScreenshotLightbox(shots, index) {
+  screenshotLightbox.shots = shots;
+  screenshotLightbox.index = index;
+  const lightbox = ensureScreenshotLightbox();
+  renderScreenshotLightbox();
+  lightbox.classList.add('open');
+  lightbox.querySelector('.screenshot-lightbox-close').focus();
+}
+
+function renderScreenshotLightbox() {
+  const lightbox = ensureScreenshotLightbox();
+  const total = screenshotLightbox.shots.length;
+  lightbox.querySelector('.screenshot-lightbox-image').src = screenshotLightbox.shots[screenshotLightbox.index];
+  lightbox.querySelector('.screenshot-lightbox-count').textContent = `${screenshotLightbox.index + 1} / ${total}`;
+  lightbox.querySelectorAll('.screenshot-lightbox-nav').forEach(button => {
+    button.hidden = total < 2;
+  });
+}
+
+function navigateScreenshotLightbox(delta) {
+  const total = screenshotLightbox.shots.length;
+  if (!total) return;
+  screenshotLightbox.index = (screenshotLightbox.index + delta + total) % total;
+  renderScreenshotLightbox();
+}
+
+function closeScreenshotLightbox() {
+  document.getElementById('screenshotLightbox')?.classList.remove('open');
+}
+
+function screenshotLightboxKeydown(event) {
+  const lightbox = document.getElementById('screenshotLightbox');
+  if (!lightbox?.classList.contains('open')) return;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeScreenshotLightbox();
+  } else if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    navigateScreenshotLightbox(-1);
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    navigateScreenshotLightbox(1);
+  }
 }
 
 async function saveField(field, value, savingMessage) {
@@ -487,6 +563,7 @@ async function saveField(field, value, savingMessage) {
 }
 
 function closeModal() {
+  closeScreenshotLightbox();
   document.getElementById('overlay').classList.remove('open');
   fetchStats();
 }
@@ -1015,6 +1092,7 @@ if (document.getElementById('bigPictureBtn')) {
 document.getElementById('overlay').addEventListener('click', e => {
   if (e.target.id === 'overlay') closeModal();
 });
+document.addEventListener('keydown', screenshotLightboxKeydown);
 
 document.getElementById('search').addEventListener('input', e => {
   state.q = e.target.value;
