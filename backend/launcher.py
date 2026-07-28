@@ -44,7 +44,7 @@ def main():
         time.sleep(0.1)
 
     webview.create_window(
-        "Mmaphysicist's Game Shelf",
+        "GameShelf",
         f"http://{HOST}:{PORT}/",
         width=1280,
         height=860,
