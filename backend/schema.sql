@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS games (
     cover_url     TEXT,
     hero_url      TEXT,                      -- wide banner art for the detail modal
     logo_url      TEXT,                      -- official logo from SteamGridDB
+    trailer_url   TEXT,                      -- local /trailers/<game_id>.webm microtrailer
     genres        TEXT,                      -- comma-separated, from enrichment
     description   TEXT,
     system_requirements TEXT,                -- minimum/recommended PC requirements
@@ -81,6 +82,7 @@ CREATE TABLE IF NOT EXISTS deleted_games (
     cover_url     TEXT,
     hero_url      TEXT,
     logo_url      TEXT,
+    trailer_url   TEXT,
     genres        TEXT,
     description   TEXT,
     system_requirements TEXT,

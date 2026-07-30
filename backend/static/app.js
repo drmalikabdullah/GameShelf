@@ -135,6 +135,11 @@ function heroUrl(g) {
   if (!g.hero_url) return '';
   return g.hero_url + '?t=' + encodeURIComponent(g.updated_at || '');
 }
+function trailerUrl(g) {
+  if (!g.trailer_url) return '';
+  return g.trailer_url + '?t=' + encodeURIComponent(g.updated_at || '');
+}
+
 
 function statusDotInfo(g) {
   const folderOk = !!(g.folder_path && g.folder_path.trim());
@@ -291,11 +296,15 @@ function openModal(idOrGame) {
             <label>Story</label>
             <p class="story-text">${escapeHtml(g.description)}</p>
           </div>` : ''}
-          ${g.platform === 'gog' ? `
+          ${g.trailer_url ? `
+          <div class="field detail-trailer-field">
+            <label>Gameplay Preview <span>(stored offline)</span></label>
+            <video src="${escapeHtml(trailerUrl(g))}" poster="${escapeHtml(heroUrl(g))}" controls muted loop playsinline preload="metadata"></video>
+          </div>` : ''}
           <div class="field detail-screenshots-field" id="screenshotsBlock" style="display:none;">
             <label>Screenshots</label>
             <div class="screenshot-grid" id="screenshotGrid"></div>
-          </div>` : ''}
+          </div>
         </section>
       </div>
       <div class="modal-actions">
@@ -400,7 +409,7 @@ function openModal(idOrGame) {
 
   document.getElementById('overlay').classList.add('open');
 
-  if (g.platform === 'gog') loadScreenshots(g.id);
+  loadScreenshots(g.id);
 }
 
 async function loadScreenshots(gameId) {
@@ -779,7 +788,7 @@ if (document.getElementById('searchAllBtn')) {
 // connected gamepad's d-pad/stick, the focused game zooms in and shows a
 // Play prompt. Gamepad state has to be polled every frame (there's no
 // "gamepadmoved" event), so this only runs while the overlay is open.
-const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, backdropFront: 'A' };
+const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null, stickWasNeutral: true, backdropFront: 'A', trailerTimer: null };
 
 function bpApplyFilter() {
   let filtered = bp.filter === 'all' ? bp.allGames
@@ -810,6 +819,21 @@ function bpCardHtml(g, i) {
     data-i="${i}" aria-label="${escapeHtml(g.title)}"></div>`;
 }
 
+function ensureBpTrailer() {
+  let video = document.getElementById('bpTrailerBackdrop');
+  if (video) return video;
+  video = document.createElement('video');
+  video.id = 'bpTrailerBackdrop';
+  video.className = 'bp-trailer-backdrop';
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.preload = 'metadata';
+  video.setAttribute('aria-hidden', 'true');
+  document.getElementById('bpOverlay').appendChild(video);
+  return video;
+}
+
 function bpUpdateBackdrop(g) {
   // Crossfade between two stacked layers: paint the hidden one with the
   // new image first, then swap which layer is visible so the transition
@@ -817,6 +841,11 @@ function bpUpdateBackdrop(g) {
   const img = g && (g.hero_url ? heroUrl(g) : (g.cover_url ? coverUrl(g) : null));
   const front = document.getElementById(bp.backdropFront === 'A' ? 'bpBackdropA' : 'bpBackdropB');
   const back = document.getElementById(bp.backdropFront === 'A' ? 'bpBackdropB' : 'bpBackdropA');
+  const video = ensureBpTrailer();
+  clearTimeout(bp.trailerTimer);
+  video.pause();
+  video.classList.remove('visible');
+
   if (img) {
     back.style.backgroundImage = `url('${img}')`;
     back.classList.add('visible');
@@ -825,6 +854,22 @@ function bpUpdateBackdrop(g) {
   }
   front.classList.remove('visible');
   bp.backdropFront = bp.backdropFront === 'A' ? 'B' : 'A';
+
+  if (g && g.trailer_url && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const gameId = g.id;
+    bp.trailerTimer = setTimeout(() => {
+      if (bp.games[bp.index]?.id !== gameId) return;
+      const source = trailerUrl(g);
+      if (video.dataset.source !== source) {
+        video.dataset.source = source;
+        video.src = source;
+        video.load();
+      } else {
+        video.currentTime = 0;
+      }
+      video.play().then(() => video.classList.add('visible')).catch(() => {});
+    }, 300);
+  }
 }
 
 function renderBigPictureStage() {
@@ -1078,6 +1123,12 @@ function closeBigPicture() {
   document.getElementById('bpOverlay').classList.remove('open');
   document.removeEventListener('keydown', bpKeydown);
   if (bp.gamepadLoop) cancelAnimationFrame(bp.gamepadLoop);
+  clearTimeout(bp.trailerTimer);
+  const trailer = document.getElementById('bpTrailerBackdrop');
+  if (trailer) {
+    trailer.pause();
+    trailer.classList.remove('visible');
+  }
   if (bpShotsAbort) bpShotsAbort.abort();
   closeBpLightbox();
   closeBpDetail();

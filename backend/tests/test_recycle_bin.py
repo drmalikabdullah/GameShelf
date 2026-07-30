@@ -17,9 +17,9 @@ class RecycleBinTests(unittest.TestCase):
         db.execute(
             """
             INSERT INTO games (
-                title, platform, steam_app_id, exe_path, logo_url,
+                title, platform, steam_app_id, exe_path, logo_url, trailer_url,
                 case_color, case_color_override
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 "Restore Test",
@@ -27,6 +27,7 @@ class RecycleBinTests(unittest.TestCase):
                 "123",
                 r"C:\Games\Test\game.exe",
                 "/logos/1.png",
+                "/trailers/1.webm",
                 "#112233",
                 "#445566",
             ),
@@ -60,6 +61,7 @@ class RecycleBinTests(unittest.TestCase):
         self.assertEqual(restored["steam_app_id"], "123")
         self.assertEqual(restored["exe_path"], r"C:\Games\Test\game.exe")
         self.assertEqual(restored["logo_url"], "/logos/1.png")
+        self.assertEqual(restored["trailer_url"], "/trailers/1.webm")
         self.assertEqual(restored["case_color"], "#112233")
         self.assertEqual(restored["case_color_override"], "#445566")
         self.assertEqual(
@@ -85,6 +87,14 @@ class CachePolicyTests(unittest.TestCase):
 
     def test_artwork_can_be_cached_locally(self):
         response = self.client.get("/covers/1.jpg")
+        self.addCleanup(response.close)
+        self.assertEqual(
+            response.headers["Cache-Control"],
+            "private, max-age=3600",
+        )
+
+    def test_offline_trailers_can_be_cached_locally(self):
+        response = self.client.get("/trailers/missing.webm")
         self.addCleanup(response.close)
         self.assertEqual(
             response.headers["Cache-Control"],

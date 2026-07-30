@@ -97,6 +97,7 @@ DB_PATH = BASE_DIR / "games.db"
 COVERS_DIR = BASE_DIR / "static" / "covers"
 HEROES_DIR = BASE_DIR / "static" / "heroes"
 LOGOS_DIR = BASE_DIR / "static" / "logos"
+TRAILERS_DIR = BASE_DIR / "static" / "trailers"
 OVERRIDES_PATH = BASE_DIR / "cover_overrides.json"
 
 if not DB_PATH.exists():
@@ -123,6 +124,7 @@ def ensure_columns(db, table, columns):
 _migration_db = sqlite3.connect(DB_PATH)
 ensure_columns(_migration_db, "games", {
     "system_requirements": "TEXT",
+    "trailer_url": "TEXT",
 })
 ensure_columns(_migration_db, "deleted_games", {
     "steam_app_id": "TEXT",
@@ -131,6 +133,7 @@ ensure_columns(_migration_db, "deleted_games", {
     "case_color": "TEXT",
     "case_color_override": "TEXT",
     "system_requirements": "TEXT",
+    "trailer_url": "TEXT",
 })
 _migration_db.commit()
 _migration_db.close()
@@ -150,7 +153,7 @@ def set_cache_policy(response):
     if request.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
     elif request.path.lower().endswith(
-        (".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg")
+        (".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".webm")
     ):
         response.headers["Cache-Control"] = "private, max-age=3600"
     else:
@@ -592,7 +595,7 @@ DELETED_GAMES_LIMIT = 50
 ARCHIVE_COLUMNS = [
     "gog_id", "gog_catalog_id", "steam_app_id", "platform", "title",
     "size_bytes", "folder_path", "exe_path", "raw_paths", "status", "rating",
-    "notes", "tags", "cover_url", "hero_url", "logo_url", "genres",
+    "notes", "tags", "cover_url", "hero_url", "logo_url", "trailer_url", "genres",
     "description", "system_requirements", "developer", "release_date",
     "case_color", "case_color_override", "added_at", "updated_at",
 ]
@@ -619,7 +622,7 @@ def delete_game(game_id):
 
     purge_ids = db.execute(
         """
-        SELECT id, original_id, cover_url, hero_url, logo_url
+        SELECT id, original_id, cover_url, hero_url, logo_url, trailer_url
         FROM deleted_games
         ORDER BY deleted_at DESC
         LIMIT -1 OFFSET ?
@@ -627,7 +630,7 @@ def delete_game(game_id):
         (DELETED_GAMES_LIMIT,),
     ).fetchall()
     for purge_row in purge_ids:
-        for url in (purge_row["cover_url"], purge_row["hero_url"], purge_row["logo_url"]):
+        for url in (purge_row["cover_url"], purge_row["hero_url"], purge_row["logo_url"], purge_row["trailer_url"]):
             unlink_static_url(url)
         db.execute(
             "DELETE FROM game_screenshots WHERE game_id = ?",
