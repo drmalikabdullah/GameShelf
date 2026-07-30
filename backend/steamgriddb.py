@@ -518,10 +518,11 @@ def fetch_steam_screenshots(appid, limit=6):
 
     results = []
     for screenshot in screenshot_urls[:limit]:
-        img_url = screenshot.get("path_thumbnail")
+        # Always prefer Steam's full-resolution source. path_thumbnail is
+        # typically only 600x337 and looks visibly soft in the detail viewer.
+        img_url = screenshot.get("path_full") or screenshot.get("path_thumbnail")
         if not img_url:
             continue
-        img_url = img_url.replace("_96x54", "")
         img_data = download_bytes(img_url)
         if img_data is not None:
             results.append((img_data, "jpg"))

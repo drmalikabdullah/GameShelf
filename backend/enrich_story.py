@@ -49,16 +49,9 @@ def download(url):
 
 
 def save_screenshot(data, dest_dir, n):
+    """Store GOG's original screenshot bytes without resizing or recompression."""
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"{n}.jpg"
-    if HAVE_PIL:
-        try:
-            im = Image.open(io.BytesIO(data)).convert("RGB")
-            im.thumbnail((960, 540))
-            im.save(dest, format="JPEG", quality=80)
-            return
-        except OSError:
-            pass
     dest.write_bytes(data)
 
 

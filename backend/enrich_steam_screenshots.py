@@ -29,17 +29,9 @@ BASE_DIR = Path(__file__).parent
 
 
 def save_screenshot(data, dest_dir, n):
+    """Store Steam's original screenshot bytes without resizing or recompression."""
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"{n}.jpg"
-    if HAVE_PIL:
-        try:
-            im = Image.open(io.BytesIO(data)).convert("RGB")
-            im.thumbnail((960, 540))
-            im.save(dest, format="JPEG", quality=80)
-            return dest
-        except OSError:
-            pass
-    dest = dest_dir / f"{n}.png"
     dest.write_bytes(data)
     return dest
 
@@ -99,7 +91,7 @@ def enrich_steam_screenshots(db_path, force=False, limit=None):
             dest_dir = BASE_DIR / "static" / "screenshots" / str(game_id)
             for idx, (data, ext) in enumerate(screenshots, 1):
                 dest = save_screenshot(data, dest_dir, idx)
-                path = str(dest.relative_to(BASE_DIR / "static"))
+                path = dest.relative_to(BASE_DIR / "static").as_posix()
                 cur.execute(
                     "INSERT INTO game_screenshots (game_id, path, position) VALUES (?, ?, ?)",
                     (game_id, "/" + path, idx - 1),
