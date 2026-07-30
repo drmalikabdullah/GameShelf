@@ -384,7 +384,7 @@ main {
   flex: 1;
   min-height: 0;
   border-radius: 5px 5px 7px 7px;
-  background-size: contain;
+  background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
   background-color: var(--case-c3, var(--surface-hi));
@@ -2615,7 +2615,7 @@ body.gog-shelf-page::before {
 .gog-shelf-page .cover {
   margin: -1px -1px 0;
   width: calc(100% + 2px);
-  padding: 5px;
+  padding: 0;
   overflow: hidden;
   border: 2px solid color-mix(in srgb, var(--case-c1, #42d1ff) 45%, rgba(255,255,255,0.16));
   border-radius: 14px 14px 10px 10px;
@@ -2635,18 +2635,11 @@ body.gog-shelf-page::before {
   pointer-events: none;
 }
 .gog-shelf-page .cover::after {
-  top: 0;
-  right: 6px;
-  bottom: 0;
-  width: 3px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #45d6ff, rgba(255,255,255,0.08) 45%, #ed3f9e);
-  opacity: 0.6;
-  box-shadow: 0 0 9px rgba(66,209,255,0.35);
+  content: none;
 }
 .gog-shelf-page .cover-art {
   z-index: 1;
-  border-radius: 9px;
+  border-radius: 11px 11px 7px 7px;
   background-color: #090d14;
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,0.13),
