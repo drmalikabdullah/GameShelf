@@ -204,6 +204,7 @@ function openModal(idOrGame) {
   modal.innerHTML = `
     <div id="f-hero-banner" class="detail-hero" ${g.hero_url ? `style="background-image:url('${escapeHtml(heroUrl(g))}')"` : ''}></div>
     <div class="detail-hero-shade"></div>
+    <div class="detail-brand"><span>GS</span> GameShelf</div>
     <button type="button" class="detail-close" onclick="closeModal()" aria-label="Close">✕</button>
 
     <div class="detail-identity">
@@ -214,12 +215,40 @@ function openModal(idOrGame) {
       <div class="detail-identity-copy">
         <h2>${escapeHtml(g.title)}${g.release_date ? ` <span class="release-year">(${escapeHtml(g.release_date)})</span>` : ''}</h2>
         <div class="id-line">${idLineText(g)}</div>
+        <div class="detail-identity-summary">
+          <div class="detail-summary-item">
+            <span>Rating</span>
+            <strong class="detail-summary-stars">${g.rating ? starString(g.rating) : 'Not rated'}</strong>
+          </div>
+          <div class="detail-summary-item">
+            <span>Tags</span>
+            <strong>${escapeHtml(g.tags || 'No tags yet')}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-media">
+      <div class="detail-player-shell">
+        ${g.trailer_url
+          ? `<video src="${escapeHtml(trailerUrl(g))}" poster="${escapeHtml(heroUrl(g))}" controls muted loop playsinline preload="metadata"></video>`
+          : `<div class="detail-player-fallback" ${g.hero_url ? `style="background-image:url('${escapeHtml(heroUrl(g))}')"` : ''}></div>`}
+        <span class="detail-offline-badge">${g.trailer_url ? 'Gameplay preview - Offline' : 'Hero artwork'}</span>
+      </div>
+      <div class="detail-media-screenshots" id="screenshotsBlock" style="display:none;">
+        <div class="screenshot-grid" id="screenshotGrid"></div>
       </div>
     </div>
 
     <div class="detail-sheet">
+      <div class="detail-tabs" role="tablist" aria-label="Game details sections">
+        <button type="button" class="detail-tab active" data-detail-tab="setup" role="tab" aria-selected="true">Game Setup</button>
+        <button type="button" class="detail-tab" data-detail-tab="progress" role="tab" aria-selected="false">Progress</button>
+        <button type="button" class="detail-tab" data-detail-tab="personal" role="tab" aria-selected="false">Personal</button>
+      </div>
+
       <div class="detail-columns">
-        <section class="detail-column">
+        <section class="detail-column detail-tab-panel active" data-detail-panel="setup">
           <h3>Game Setup</h3>
           <div class="field">
             <label>Title <span>(or paste a SteamGridDB URL)</span></label>
@@ -251,7 +280,7 @@ function openModal(idOrGame) {
           </div>
         </section>
 
-        <section class="detail-column">
+        <section class="detail-column detail-tab-panel" data-detail-panel="progress" hidden>
           <h3>Launch &amp; Progress</h3>
           ${g.platform === 'gog' || g.platform === 'steam' ? `
           <div class="field">
@@ -281,7 +310,7 @@ function openModal(idOrGame) {
           </div>` : ''}
         </section>
 
-        <section class="detail-column detail-personal">
+        <section class="detail-column detail-personal detail-tab-panel" data-detail-panel="personal" hidden>
           <h3>Personal</h3>
           <div class="field">
             <label>Tags <span>(comma-separated)</span></label>
@@ -296,15 +325,6 @@ function openModal(idOrGame) {
             <label>Story</label>
             <p class="story-text">${escapeHtml(g.description)}</p>
           </div>` : ''}
-          ${g.trailer_url ? `
-          <div class="field detail-trailer-field">
-            <label>Gameplay Preview <span>(stored offline)</span></label>
-            <video src="${escapeHtml(trailerUrl(g))}" poster="${escapeHtml(heroUrl(g))}" controls muted loop playsinline preload="metadata"></video>
-          </div>` : ''}
-          <div class="field detail-screenshots-field" id="screenshotsBlock" style="display:none;">
-            <label>Screenshots</label>
-            <div class="screenshot-grid" id="screenshotGrid"></div>
-          </div>
         </section>
       </div>
       <div class="modal-actions">
@@ -317,6 +337,20 @@ function openModal(idOrGame) {
     </div>
   `;
 
+  modal.querySelectorAll('[data-detail-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.detailTab;
+      modal.querySelectorAll('[data-detail-tab]').forEach(button => {
+        const selected = button === tab;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-selected', String(selected));
+      });
+      modal.querySelectorAll('[data-detail-panel]').forEach(panel => {
+        panel.hidden = panel.dataset.detailPanel !== target;
+        panel.classList.toggle('active', panel.dataset.detailPanel === target);
+      });
+    });
+  });
   document.querySelectorAll('#f-rating button').forEach(btn => {
     btn.addEventListener('click', () => {
       const v = parseInt(btn.dataset.v);
