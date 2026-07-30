@@ -92,7 +92,7 @@ def ensure_columns(conn):
         conn.commit()
 
 
-def enrich_microtrailers(db_path, force=False, limit=None, resolve_missing=False):
+def enrich_microtrailers(db_path, force=False, limit=None, resolve_missing=False, platform=None):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     ensure_columns(conn)
@@ -103,6 +103,9 @@ def enrich_microtrailers(db_path, force=False, limit=None, resolve_missing=False
     """
     params = []
     conditions = []
+    if platform:
+        conditions.append("platform = ?")
+        params.append(platform)
     if not force:
         conditions.append("COALESCE(trailer_url, '') = ''")
     if not resolve_missing:
@@ -201,12 +204,18 @@ if __name__ == "__main__":
         action="store_true",
         help="Try resolving missing Steam app IDs by title",
     )
+    parser.add_argument(
+        "--platform",
+        choices=("gog", "steam", "ps3", "ps4"),
+        help="Only process games from this shelf",
+    )
     arguments = parser.parse_args()
     enrich_microtrailers(
         arguments.db,
         force=arguments.force,
         limit=arguments.limit,
         resolve_missing=arguments.resolve_missing,
+        platform=arguments.platform,
     )
 
 
