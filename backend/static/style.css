@@ -3779,7 +3779,9 @@ body.gog-shelf-page::before {
     inset 0 1px color-mix(in srgb, var(--bp-text) 8%, transparent);
 }
 
+.detail-media-viewport,
 .detail-player-shell video,
+.detail-selected-screenshot,
 .detail-player-fallback {
   display: block;
   width: 100%;
@@ -3787,6 +3789,14 @@ body.gog-shelf-page::before {
   min-height: 260px;
   object-fit: cover;
   background-color: #030509;
+}
+
+.detail-media-viewport {
+  min-height: 0;
+}
+
+.detail-selected-screenshot {
+  object-fit: contain;
 }
 
 .detail-player-fallback {
@@ -3842,6 +3852,34 @@ body.gog-shelf-page::before {
 .game-detail-modal .detail-media-screenshots .screenshot-thumb:hover {
   border-color: color-mix(in srgb, var(--bp-accent) 75%, transparent);
   transform: translateY(-2px);
+}
+
+.game-detail-modal .detail-media-screenshots .screenshot-thumb.active {
+  border-color: var(--bp-accent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--bp-accent) 35%, transparent),
+    0 8px 24px rgba(0,0,0,0.35);
+}
+
+.detail-movie-thumb {
+  position: relative;
+}
+
+.detail-movie-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(3,5,9,0.7);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 .game-detail-modal .detail-media-screenshots .screenshot-thumb img {

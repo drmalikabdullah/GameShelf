@@ -230,10 +230,12 @@ function openModal(idOrGame) {
 
     <div class="detail-media">
       <div class="detail-player-shell">
-        ${g.trailer_url
-          ? `<video src="${escapeHtml(trailerUrl(g))}" poster="${escapeHtml(heroUrl(g))}" controls muted loop playsinline preload="metadata"></video>`
-          : `<div class="detail-player-fallback" ${g.hero_url ? `style="background-image:url('${escapeHtml(heroUrl(g))}')"` : ''}></div>`}
-        <span class="detail-offline-badge">${g.trailer_url ? 'Gameplay preview - Offline' : 'Hero artwork'}</span>
+        <div class="detail-media-viewport" id="detailMediaViewport">
+          ${g.trailer_url
+            ? `<video src="${escapeHtml(trailerUrl(g))}" poster="${escapeHtml(heroUrl(g))}" controls muted loop playsinline preload="metadata"></video>`
+            : `<div class="detail-player-fallback" ${g.hero_url ? `style="background-image:url('${escapeHtml(heroUrl(g))}')"` : ''}></div>`}
+        </div>
+        <span class="detail-offline-badge" id="detailMediaBadge">${g.trailer_url ? 'Gameplay preview - Offline' : 'Hero artwork'}</span>
       </div>
       <div class="detail-media-screenshots" id="screenshotsBlock" style="display:none;">
         <div class="screenshot-grid" id="screenshotGrid"></div>
@@ -443,22 +445,51 @@ function openModal(idOrGame) {
 
   document.getElementById('overlay').classList.add('open');
 
-  loadScreenshots(g.id);
+  loadScreenshots(g);
 }
 
-async function loadScreenshots(gameId) {
-  const shots = await fetch(`/api/games/${gameId}/screenshots`).then(r => r.json());
-  if (shots.length === 0) return;
+function selectDetailMedia(g, type, url, selectedButton) {
+  const viewport = document.getElementById('detailMediaViewport');
+  const badge = document.getElementById('detailMediaBadge');
+  if (!viewport || !badge) return;
+
+  if (type === 'movie') {
+    viewport.innerHTML = `<video src="${escapeHtml(trailerUrl(g))}" poster="${escapeHtml(heroUrl(g))}" controls muted loop playsinline preload="metadata" autoplay></video>`;
+    badge.textContent = 'Gameplay preview - Offline';
+  } else {
+    viewport.innerHTML = `<img class="detail-selected-screenshot" src="${escapeHtml(url)}" alt="Selected game screenshot">`;
+    badge.textContent = 'Screenshot';
+  }
+
+  document.querySelectorAll('#screenshotGrid .screenshot-thumb').forEach(button => {
+    button.classList.toggle('active', button === selectedButton);
+    button.setAttribute('aria-pressed', String(button === selectedButton));
+  });
+}
+
+async function loadScreenshots(g) {
+  const shots = await fetch(`/api/games/${g.id}/screenshots`).then(r => r.json());
+  if (shots.length === 0 && !g.trailer_url) return;
   const block = document.getElementById('screenshotsBlock');
   const grid = document.getElementById('screenshotGrid');
   if (!block || !grid) return; // modal moved on before this resolved
-  grid.innerHTML = shots.map((url, index) => `
-    <button type="button" class="screenshot-thumb" data-index="${index}" aria-label="Open screenshot ${index + 1} of ${shots.length}">
+
+  const movieThumb = g.trailer_url ? `
+    <button type="button" class="screenshot-thumb detail-movie-thumb active" data-media-type="movie" aria-label="Show gameplay movie" aria-pressed="true">
+      <img src="${escapeHtml(heroUrl(g))}" loading="lazy" alt="Gameplay movie">
+      <span class="detail-movie-play" aria-hidden="true">&#9654;</span>
+    </button>
+  ` : '';
+  grid.innerHTML = movieThumb + shots.map((url, index) => `
+    <button type="button" class="screenshot-thumb" data-media-type="screenshot" data-url="${escapeHtml(url)}" aria-label="Show screenshot ${index + 1} of ${shots.length}" aria-pressed="false">
       <img src="${escapeHtml(url)}" loading="lazy" alt="Screenshot ${index + 1}">
     </button>
   `).join('');
+
   grid.querySelectorAll('.screenshot-thumb').forEach(button => {
-    button.addEventListener('click', () => openScreenshotLightbox(shots, Number(button.dataset.index)));
+    button.addEventListener('click', () => {
+      selectDetailMedia(g, button.dataset.mediaType, button.dataset.url || '', button);
+    });
   });
   block.style.display = '';
 }
