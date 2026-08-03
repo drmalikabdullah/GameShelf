@@ -154,7 +154,11 @@ function statusDotInfo(g) {
 }
 
 function idLineText(g) {
-  if (g.platform !== 'gog') return g.platform === 'steam' ? `Steam backup · ${g.size_human}` : g.size_human;
+  if (g.platform === 'steam') {
+    const steamId = g.steam_app_id ? `Steam App ID ${escapeHtml(g.steam_app_id)}` : 'Steam App ID not verified';
+    return `${steamId} · ${g.size_human}`;
+  }
+  if (g.platform !== 'gog') return g.size_human;
   const parts = [];
   parts.push(g.gog_id ? `Build ${escapeHtml(g.gog_id)}` : 'no build version detected');
   parts.push(g.gog_catalog_id ? `GOG ID ${escapeHtml(g.gog_catalog_id)}` : 'GOG ID not verified');
@@ -183,6 +187,7 @@ function render() {
       <div class="card-body">
         <div class="card-title" title="${escapeHtml(g.title)}"><span class="status-dot ${dot.cls}" title="${escapeHtml(dot.title)}"></span>${(g.platform === 'gog' || g.platform === 'steam') && !g.folder_path ? `<span class="folder-missing" title="No folder linked">⚠️</span>` : ''}${escapeHtml(g.title)}${g.release_date ? ` <span class="release-year">(${escapeHtml(g.release_date)})</span>` : ''}</div>
         ${g.platform === 'gog' && g.gog_id ? `<div class="card-build" title="Build version">Build ${escapeHtml(g.gog_id)}</div>` : ''}
+        ${g.platform === 'steam' ? `<div class="card-build" title="Steam App ID">Steam ID ${g.steam_app_id ? escapeHtml(g.steam_app_id) : 'not verified'}</div>` : ''}
         <div class="card-meta">
           <span>${g.size_human}</span>
           ${g.rating ? `<span class="stars">${starString(g.rating)}</span>` : ''}

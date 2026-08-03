@@ -122,6 +122,13 @@ def best_match(local_title, candidates):
         cand_words = word_set(cand["name"])
         if not cand_words:
             continue
+        # Numeric sequel/version markers are distinguishing, not optional.
+        # Without this guard, "Tekken 6" can match DLC whose title merely
+        # contains "Tekken" because one of its two words overlaps.
+        local_numbers = {word for word in local_words if word.isdigit()}
+        cand_numbers = {word for word in cand_words if word.isdigit()}
+        if local_numbers and not local_numbers.issubset(cand_numbers):
+            continue
         overlap = len(local_words & cand_words)
         if overlap == 0:
             continue
@@ -135,7 +142,13 @@ def best_match(local_title, candidates):
     return best
 
 
+def is_exact_game_title(local_title, candidate_title):
+    """Conservative cross-store check used before borrowing Steam media."""
+    return bool(word_set(local_title)) and word_set(local_title) == word_set(candidate_title)
+
+
 GAME_URL_RE = re.compile(r"steamgriddb\.com/game/(\d+)")
+STEAM_APP_URL_RE = re.compile(r"store\.steampowered\.com/app/(\d+)", re.IGNORECASE)
 
 
 def parse_game_url(text):
@@ -146,6 +159,15 @@ def parse_game_url(text):
     the Galaxy (base game vs. the Telltale series) with certainty."""
     m = GAME_URL_RE.search(text)
     return int(m.group(1)) if m else None
+
+
+def parse_steam_appid(text):
+    """Return an app ID from a Steam Store URL or a bare numeric ID."""
+    value = (text or "").strip()
+    match = STEAM_APP_URL_RE.search(value)
+    if match:
+        return match.group(1)
+    return value if value.isdigit() else None
 
 
 def fetch_game_name(sgdb_id, api_key):
@@ -375,6 +397,11 @@ def _fetch_steam_store_details(appid):
     if not entry.get("success"):
         return None
     return entry.get("data", {})
+
+
+def fetch_steam_game_name(appid):
+    details = _fetch_steam_store_details(appid)
+    return details.get("name") if details else None
 
 
 def _steam_html_to_text(value):

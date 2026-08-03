@@ -21,6 +21,9 @@ from flask import Flask, Response, g, jsonify, request, send_from_directory
 import steamgriddb
 import gog_catalog
 import check_latest_builds
+import enrich_steam_microtrailers
+import enrich_steam_screenshots
+import enrich_story
 
 SIZE_RE = re.compile(r'^([\d.]+)\s*([KMGT]?)B?$', re.IGNORECASE)
 UNIT_MULT = {'': 1, 'K': 1024, 'M': 1024**2, 'G': 1024**3, 'T': 1024**4}
@@ -98,6 +101,7 @@ COVERS_DIR = BASE_DIR / "static" / "covers"
 HEROES_DIR = BASE_DIR / "static" / "heroes"
 LOGOS_DIR = BASE_DIR / "static" / "logos"
 TRAILERS_DIR = BASE_DIR / "static" / "trailers"
+SCREENSHOTS_DIR = BASE_DIR / "static" / "screenshots"
 OVERRIDES_PATH = BASE_DIR / "cover_overrides.json"
 
 if not DB_PATH.exists():
@@ -287,6 +291,12 @@ def verify_gog_id(db, game_id, title):
     if public_rating is not None:
         db.execute("UPDATE games SET rating = ? WHERE id = ? AND rating IS NULL", (public_rating, game_id))
     db.commit()
+    if real_id:
+        try:
+            enrich_story.download_for_game(db, game_id, real_id, SCREENSHOTS_DIR)
+        except Exception:
+            # Optional GOG enrichment must never prevent the game being saved.
+            pass
 
 
 def refresh_steam_release_year(db, game_id, title):
@@ -295,13 +305,21 @@ def refresh_steam_release_year(db, game_id, title):
     Saves the app id, release year, review score, and short description used
     as the story in Big Picture mode.
     """
-    match = steamgriddb.find_steam_appid(title)
-    year, public_rating, description, requirements = None, None, None, None
+    existing = db.execute(
+        "SELECT steam_app_id FROM games WHERE id = ?", (game_id,)
+    ).fetchone()
+    app_id = existing["steam_app_id"] if existing else None
+    override = load_overrides().get(title) or {}
+    app_id = str(override.get("steam_appid") or app_id or "") or None
+    match = None if app_id else steamgriddb.find_steam_appid(title)
     if match:
-        year = steamgriddb.fetch_steam_release_year(match["id"])
-        public_rating = steamgriddb.fetch_steam_review_score(match["id"])
-        description, requirements = steamgriddb.fetch_steam_description_and_requirements(match["id"])
-        db.execute("UPDATE games SET steam_app_id = ? WHERE id = ?", (match["id"], game_id))
+        app_id = str(match["id"])
+    year, public_rating, description, requirements = None, None, None, None
+    if app_id:
+        year = steamgriddb.fetch_steam_release_year(app_id)
+        public_rating = steamgriddb.fetch_steam_review_score(app_id)
+        description, requirements = steamgriddb.fetch_steam_description_and_requirements(app_id)
+        db.execute("UPDATE games SET steam_app_id = ? WHERE id = ?", (app_id, game_id))
     db.execute(
         """UPDATE games
            SET release_date = ?,
@@ -313,6 +331,64 @@ def refresh_steam_release_year(db, game_id, title):
     if public_rating is not None:
         db.execute("UPDATE games SET rating = ? WHERE id = ? AND rating IS NULL", (public_rating, game_id))
     db.commit()
+
+
+def refresh_steam_microtrailer(db, game_id):
+    """Best-effort offline trailer download for a newly resolved Steam game."""
+    row = db.execute(
+        "SELECT steam_app_id, trailer_url FROM games WHERE id = ?", (game_id,)
+    ).fetchone()
+    if row is None or row["trailer_url"] or not row["steam_app_id"]:
+        return False
+    try:
+        return enrich_steam_microtrailers.download_for_game(
+            db, game_id, row["steam_app_id"], TRAILERS_DIR
+        )
+    except Exception:
+        # Trailer enrichment must never prevent the game itself being saved.
+        return False
+
+
+def refresh_steam_screenshots(db, game_id):
+    """Best-effort local screenshot download for a resolved Steam game."""
+    row = db.execute(
+        "SELECT steam_app_id FROM games WHERE id = ?", (game_id,)
+    ).fetchone()
+    if row is None or not row["steam_app_id"]:
+        return 0
+    try:
+        return enrich_steam_screenshots.download_for_game(
+            db, game_id, row["steam_app_id"], SCREENSHOTS_DIR
+        )
+    except Exception:
+        # Screenshot enrichment must never prevent the game itself being saved.
+        return 0
+
+
+def refresh_gog_steam_microtrailer(db, game_id, title):
+    """Use the exact matching Steam release when GOG has no local trailer."""
+    row = db.execute(
+        "SELECT steam_app_id, trailer_url FROM games WHERE id = ?", (game_id,)
+    ).fetchone()
+    if row is None or row["trailer_url"]:
+        return False
+
+    app_id = row["steam_app_id"]
+    if not app_id:
+        override = load_overrides().get(title) or {}
+        app_id = override.get("steam_appid")
+    if not app_id:
+        match = steamgriddb.find_steam_appid(title)
+        if match and steamgriddb.is_exact_game_title(title, match["name"]):
+            app_id = str(match["id"])
+    if not app_id:
+        return False
+
+    db.execute(
+        "UPDATE games SET steam_app_id = ? WHERE id = ?", (str(app_id), game_id)
+    )
+    db.commit()
+    return refresh_steam_microtrailer(db, game_id)
 
 
 def apply_title(db, game_id, raw_title, platform="gog"):
@@ -333,6 +409,25 @@ def apply_title(db, game_id, raw_title, platform="gog"):
     available or came up empty - covering the common case of adding an
     actual GOG game by its real title with no setup required."""
     api_key = steamgriddb.get_api_key()
+
+    steam_app_id = steamgriddb.parse_steam_appid(raw_title) if platform == "steam" else None
+    if steam_app_id:
+        db.execute(
+            "UPDATE games SET steam_app_id = ? WHERE id = ?", (steam_app_id, game_id)
+        )
+        db.commit()
+        resolved_title = steamgriddb.fetch_steam_game_name(steam_app_id) or raw_title
+        data, ext = steamgriddb.fetch_steam_official(steam_app_id)
+        if data is not None:
+            save_cover(db, game_id, data, ext)
+        hero_data = steamgriddb.fetch_steam_hero(steam_app_id)
+        if hero_data is not None:
+            save_hero(db, game_id, hero_data, "jpg")
+        if api_key:
+            logo_data, logo_ext = steamgriddb.fetch_logo(resolved_title, api_key)
+            if logo_data is not None:
+                save_logo(db, game_id, logo_data, logo_ext)
+        return resolved_title
 
     if api_key:
         sgdb_id = steamgriddb.parse_game_url(raw_title)
@@ -551,8 +646,11 @@ def update_game(game_id):
             db.commit()
         if row["platform"] == "gog":
             verify_gog_id(db, game_id, resolved_title)
+            refresh_gog_steam_microtrailer(db, game_id, resolved_title)
         elif row["platform"] == "steam":
             refresh_steam_release_year(db, game_id, resolved_title)
+            refresh_steam_screenshots(db, game_id)
+            refresh_steam_microtrailer(db, game_id)
 
     row = db.execute("SELECT * FROM games WHERE id = ?", (game_id,)).fetchone()
     return jsonify(serialize_game(row))
@@ -584,8 +682,11 @@ def create_game():
         db.commit()
     if platform == "gog":
         verify_gog_id(db, game_id, resolved_title)
+        refresh_gog_steam_microtrailer(db, game_id, resolved_title)
     elif platform == "steam":
         refresh_steam_release_year(db, game_id, resolved_title)
+        refresh_steam_screenshots(db, game_id)
+        refresh_steam_microtrailer(db, game_id)
 
     row = db.execute("SELECT * FROM games WHERE id = ?", (game_id,)).fetchone()
     return jsonify(serialize_game(row)), 201

@@ -36,6 +36,44 @@ def save_screenshot(data, dest_dir, n):
     return dest
 
 
+def download_for_game(conn, game_id, app_id, screenshots_dir=None, limit=6):
+    """Download and attach screenshots for one newly added Steam game."""
+    existing = conn.execute(
+        "SELECT COUNT(*) FROM game_screenshots WHERE game_id = ?", (game_id,)
+    ).fetchone()[0]
+    if existing:
+        return existing
+
+    screenshots = steamgriddb.fetch_steam_screenshots(str(app_id), limit=limit)
+    if not screenshots:
+        return 0
+
+    root = Path(screenshots_dir or (BASE_DIR / "static" / "screenshots"))
+    destination = root / str(game_id)
+    written = []
+    try:
+        for index, (data, ext) in enumerate(screenshots, 1):
+            destination.mkdir(parents=True, exist_ok=True)
+            final_path = destination / f"{index}.{ext or 'jpg'}"
+            temporary = final_path.with_suffix(final_path.suffix + ".part")
+            temporary.write_bytes(data)
+            temporary.replace(final_path)
+            written.append(final_path)
+            conn.execute(
+                "INSERT INTO game_screenshots (game_id, path, position) VALUES (?, ?, ?)",
+                (game_id, f"/screenshots/{game_id}/{final_path.name}", index - 1),
+            )
+        conn.commit()
+        return len(written)
+    except Exception:
+        conn.rollback()
+        for path in written:
+            path.unlink(missing_ok=True)
+        for path in destination.glob("*.part") if destination.exists() else ():
+            path.unlink(missing_ok=True)
+        raise
+
+
 def enrich_steam_screenshots(db_path, force=False, limit=None):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row

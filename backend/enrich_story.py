@@ -55,6 +55,54 @@ def save_screenshot(data, dest_dir, n):
     dest.write_bytes(data)
 
 
+def download_for_game(db, game_id, catalog_id, screenshots_dir=None):
+    """Fetch and persist all available GOG details for one added game."""
+    description, shot_urls, genres, developer = (
+        gog_catalog.fetch_story_and_screenshots(catalog_id)
+    )
+    if description:
+        db.execute("UPDATE games SET description = ? WHERE id = ?", (description, game_id))
+    if genres:
+        db.execute("UPDATE games SET genres = ? WHERE id = ?", (genres, game_id))
+    if developer:
+        db.execute("UPDATE games SET developer = ? WHERE id = ?", (developer, game_id))
+
+    existing = db.execute(
+        "SELECT COUNT(*) FROM game_screenshots WHERE game_id = ?", (game_id,)
+    ).fetchone()[0]
+    if existing or not shot_urls:
+        db.commit()
+        return existing
+
+    root = Path(screenshots_dir or (BASE_DIR / "static" / "screenshots"))
+    destination = root / str(game_id)
+    written = []
+    try:
+        for index, url in enumerate(shot_urls, 1):
+            data = download(url)
+            if data is None:
+                continue
+            destination.mkdir(parents=True, exist_ok=True)
+            final_path = destination / f"{index}.jpg"
+            temporary = final_path.with_suffix(".jpg.part")
+            temporary.write_bytes(data)
+            temporary.replace(final_path)
+            written.append(final_path)
+            db.execute(
+                "INSERT INTO game_screenshots (game_id, path, position) VALUES (?, ?, ?)",
+                (game_id, f"/screenshots/{game_id}/{index}.jpg", index - 1),
+            )
+        db.commit()
+        return len(written)
+    except Exception:
+        db.rollback()
+        for path in written:
+            path.unlink(missing_ok=True)
+        for path in destination.glob("*.part") if destination.exists() else ():
+            path.unlink(missing_ok=True)
+        raise
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=str(BASE_DIR / "games.db"))

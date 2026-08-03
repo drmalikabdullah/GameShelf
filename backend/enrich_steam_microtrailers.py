@@ -92,6 +92,47 @@ def ensure_columns(conn):
         conn.commit()
 
 
+def download_for_game(conn, game_id, app_id, trailers_dir=None):
+    """Download and attach one Steam microtrailer.
+
+    Returns True when a local trailer is available and False when Steam has
+    no usable store data or microtrailer. Network and decoding errors remain
+    exceptions so callers can decide whether to report or ignore them.
+    """
+    trailers_dir = Path(trailers_dir or TRAILERS_DIR)
+    trailers_dir.mkdir(parents=True, exist_ok=True)
+    destination = trailers_dir / f"{game_id}.webm"
+    local_url = f"/trailers/{game_id}.webm"
+
+    if destination.exists():
+        conn.execute(
+            "UPDATE games SET trailer_url = ? WHERE id = ?",
+            (local_url, game_id),
+        )
+        conn.commit()
+        return True
+
+    store_data = fetch_store_data(str(app_id))
+    if not store_data:
+        return False
+    video, _movie_name = download_microtrailer(store_data)
+    if not video:
+        return False
+
+    temporary = destination.with_suffix(".webm.part")
+    try:
+        temporary.write_bytes(video)
+        temporary.replace(destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+    conn.execute(
+        "UPDATE games SET trailer_url = ?, updated_at = datetime('now') WHERE id = ?",
+        (local_url, game_id),
+    )
+    conn.commit()
+    return True
+
+
 def enrich_microtrailers(db_path, force=False, limit=None, resolve_missing=False, platform=None):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row

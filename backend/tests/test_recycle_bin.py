@@ -2,6 +2,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import app
 
@@ -113,6 +114,53 @@ class StaticPathSafetyTests(unittest.TestCase):
 
     def test_absolute_path_is_kept_under_static(self):
         self.assertIsNone(app.static_file_from_url(r"C:\Windows\system.ini"))
+
+
+class SteamTrailerAddTests(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.db_path = Path(self.temp_dir.name) / "games.db"
+        db = sqlite3.connect(self.db_path)
+        db.executescript(
+            (Path(app.__file__).parent / "schema.sql").read_text(encoding="utf-8")
+        )
+        db.close()
+        self.original_db_path = app.DB_PATH
+        app.DB_PATH = self.db_path
+        self.client = app.app.test_client()
+
+    def tearDown(self):
+        app.DB_PATH = self.original_db_path
+        self.temp_dir.cleanup()
+
+    @mock.patch("app.refresh_steam_microtrailer")
+    @mock.patch("app.refresh_steam_screenshots")
+    @mock.patch("app.refresh_steam_release_year")
+    @mock.patch("app.apply_title")
+    def test_adding_steam_game_attempts_microtrailer(
+        self, apply_title, refresh_metadata, refresh_screenshots, refresh_trailer
+    ):
+        apply_title.return_value = "Trailer Test"
+        response = self.client.post(
+            "/api/games", json={"title": "Trailer Test", "platform": "steam"}
+        )
+        self.assertEqual(response.status_code, 201)
+        game_id = response.get_json()["id"]
+        refresh_metadata.assert_called_once_with(mock.ANY, game_id, "Trailer Test")
+        refresh_screenshots.assert_called_once_with(mock.ANY, game_id)
+        refresh_trailer.assert_called_once_with(mock.ANY, game_id)
+
+    @mock.patch("app.enrich_steam_microtrailers.download_for_game")
+    def test_trailer_failure_is_non_fatal(self, download):
+        download.side_effect = OSError("offline")
+        with app.app.app_context():
+            db = app.get_db()
+            cursor = db.execute(
+                "INSERT INTO games (title, platform, steam_app_id) VALUES (?, ?, ?)",
+                ("Offline Trailer Test", "steam", "123"),
+            )
+            db.commit()
+            self.assertFalse(app.refresh_steam_microtrailer(db, cursor.lastrowid))
 
 
 if __name__ == "__main__":
