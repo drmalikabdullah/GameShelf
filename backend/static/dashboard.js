@@ -395,6 +395,7 @@ async function loadGameLists() {
 function loadMissingFolders() {
   const scanBtn = document.getElementById('scanMissingFoldersBtn');
   const updateBtn = document.getElementById('updateInstalledBtn');
+  const refreshSizesBtn = document.getElementById('refreshSizesBtn');
   const statusDiv = document.getElementById('scanStatus');
   const resultsDiv = document.getElementById('scanResults');
 
@@ -504,6 +505,53 @@ function loadMissingFolders() {
       clearInterval(progressTimer);
       updateBtn.disabled = false;
       updateBtn.textContent = 'Update installed games';
+    }
+  });
+
+  refreshSizesBtn.addEventListener('click', async () => {
+    refreshSizesBtn.disabled = true;
+    refreshSizesBtn.textContent = '⏳ Calculating…';
+    statusDiv.className = 'save-hint working';
+    statusDiv.innerHTML = `
+      <div class="install-scan-feedback" role="status" aria-live="polite">
+        <div class="install-scan-heading"><span class="install-scan-spinner"></span><span>Calculating game sizes on disk</span></div>
+        <div class="install-scan-progress"><span></span></div>
+        <div class="install-scan-elapsed" id="sizeScanElapsed">Elapsed: 0s</div>
+      </div>`;
+    const startedAt = Date.now();
+    const progressTimer = setInterval(() => {
+      const elapsedNode = document.getElementById('sizeScanElapsed');
+      if (elapsedNode) elapsedNode.textContent = `Elapsed: ${Math.floor((Date.now() - startedAt) / 1000)}s`;
+    }, 1000);
+
+    try {
+      const res = await fetch('/api/scan/refresh-sizes', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+
+      await loadDashboard();
+      statusDiv.className = 'save-hint dash-ok';
+      statusDiv.textContent = `✓ Checked ${data.scanned_count} game folders; ${data.updated_count} sizes changed. Library size: ${data.total_size_human}.${data.missing_count ? ` ${data.missing_count} missing folders skipped.` : ''}${data.unavailable_count ? ` ${data.unavailable_count} folders skipped because their drive is unavailable.` : ''}`;
+      const rows = data.updated_games.map(game => `
+        <div class="list-row">
+          <div style="flex:1;">
+            <div style="font-weight:500;">${escapeHtml(game.title)}</div>
+            <div style="font-size:12px;color:var(--muted);">${escapeHtml(game.old_size_human)} → ${escapeHtml(game.new_size_human)}</div>
+          </div>
+          <span style="font-size:12px;color:#64c8ff;">${PLATFORM_LABEL[game.platform]}</span>
+        </div>
+      `).join('');
+      resultsDiv.innerHTML = rows
+        ? `<div style="margin-top:16px;">${rows}</div>`
+        : '<div class="save-hint" style="margin-top:16px;">All reachable game sizes were already current.</div>';
+      resultsDiv.style.display = '';
+    } catch (e) {
+      statusDiv.className = 'save-hint dash-bad';
+      statusDiv.textContent = `Error refreshing game sizes: ${e.message}`;
+    } finally {
+      clearInterval(progressTimer);
+      refreshSizesBtn.disabled = false;
+      refreshSizesBtn.textContent = 'Refresh game sizes';
     }
   });
 }

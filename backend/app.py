@@ -831,7 +831,16 @@ def play_game(game_id):
     exe_path = row["exe_path"]
     if not exe_path or not Path(exe_path).is_file():
         return jsonify({"error": "executable not found on disk"}), 400
-    subprocess.Popen([exe_path], cwd=str(Path(exe_path).parent))
+    try:
+        subprocess.Popen([exe_path], cwd=str(Path(exe_path).parent))
+    except OSError as error:
+        if platform.system() == "Windows" and getattr(error, "winerror", None) == 740:
+            try:
+                os.startfile(exe_path, "runas")
+            except OSError as elevation_error:
+                return jsonify({"error": f"elevated launch failed: {elevation_error}"}), 400
+        else:
+            return jsonify({"error": f"game launch failed: {error}"}), 400
     return "", 204
 
 
@@ -1378,6 +1387,58 @@ def update_installed_games():
         "moved_to_backlog": moved_to_backlog, "folders_linked": folders_linked,
         "missing_folders": len(games) - folders_linked,
         "updated_games": updated_games,
+    })
+
+
+@app.route("/api/scan/refresh-sizes", methods=["POST"])
+def refresh_game_sizes():
+    """Recalculate stored sizes for every game with a reachable folder."""
+    db = get_db()
+    games = db.execute(
+        "SELECT id, title, platform, folder_path, size_bytes FROM games ORDER BY title"
+    ).fetchall()
+    refreshed = []
+    unchanged_count = missing_count = unavailable_count = no_folder_count = 0
+
+    for game in games:
+        folder_path = (game["folder_path"] or "").strip()
+        if not folder_path:
+            no_folder_count += 1
+            continue
+
+        path = Path(folder_path)
+        if path.anchor and not Path(path.anchor).exists():
+            unavailable_count += 1
+            continue
+        new_size = calculate_folder_size(folder_path)
+        if new_size is None:
+            missing_count += 1
+            continue
+        old_size = game["size_bytes"] or 0
+        if new_size == old_size:
+            unchanged_count += 1
+            continue
+
+        db.execute(
+            "UPDATE games SET size_bytes = ?, updated_at = datetime('now') WHERE id = ?",
+            (new_size, game["id"]),
+        )
+        refreshed.append({
+            "id": game["id"], "title": game["title"],
+            "platform": game["platform"], "old_size_human": human_size(old_size),
+            "new_size_human": human_size(new_size),
+        })
+
+    db.commit()
+    total_size = db.execute(
+        "SELECT COALESCE(SUM(size_bytes), 0) s FROM games"
+    ).fetchone()["s"]
+    return jsonify({
+        "total_games": len(games), "scanned_count": len(refreshed) + unchanged_count,
+        "updated_count": len(refreshed), "unchanged_count": unchanged_count,
+        "missing_count": missing_count, "unavailable_count": unavailable_count,
+        "no_folder_count": no_folder_count, "total_size_bytes": total_size,
+        "total_size_human": human_size(total_size), "updated_games": refreshed,
     })
 
 

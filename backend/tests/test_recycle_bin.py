@@ -219,6 +219,69 @@ class InstallationStatusTests(unittest.TestCase):
         self.assertEqual(data["moved_to_backlog"], 1)
         self.assertEqual(data["unavailable_paths"], 0)
 
+    def test_refresh_sizes_recalculates_reachable_game_folders(self):
+        game_folder = Path(self.temp_dir.name) / "installed-game"
+        game_folder.mkdir()
+        (game_folder / "game.bin").write_bytes(b"1234567890")
+        nested = game_folder / "data"
+        nested.mkdir()
+        (nested / "assets.bin").write_bytes(b"12345")
+        db = sqlite3.connect(self.db_path)
+        db.execute(
+            "UPDATE games SET folder_path = ?, size_bytes = ? WHERE id = 1",
+            (str(game_folder), 1),
+        )
+        db.commit()
+        db.close()
+
+        response = self.client.post("/api/scan/refresh-sizes")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["scanned_count"], 1)
+        self.assertEqual(data["updated_count"], 1)
+        self.assertEqual(data["total_size_bytes"], 15)
+        self.assertEqual(data["updated_games"][0]["old_size_human"], "1B")
+        self.assertEqual(data["updated_games"][0]["new_size_human"], "15B")
+
+        db = sqlite3.connect(self.db_path)
+        stored_size = db.execute("SELECT size_bytes FROM games WHERE id = 1").fetchone()[0]
+        db.close()
+        self.assertEqual(stored_size, 15)
+
+
+class ElevatedLaunchTests(unittest.TestCase):
+    @mock.patch("app.os.startfile")
+    @mock.patch("app.platform.system", return_value="Windows")
+    @mock.patch("app.subprocess.Popen")
+    def test_windows_elevation_error_uses_runas(self, popen, _system, startfile):
+        error = OSError("elevation required")
+        error.winerror = 740
+        popen.side_effect = error
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            exe_path = Path(temp_dir) / "admin-game.exe"
+            exe_path.write_bytes(b"test")
+            db_path = Path(temp_dir) / "games.db"
+            db = sqlite3.connect(db_path)
+            db.executescript(
+                (Path(app.__file__).parent / "schema.sql").read_text(encoding="utf-8")
+            )
+            db.execute(
+                "INSERT INTO games (title, platform, exe_path) VALUES (?, ?, ?)",
+                ("Admin Game", "steam", str(exe_path)),
+            )
+            db.commit()
+            db.close()
+            original_db_path = app.DB_PATH
+            app.DB_PATH = db_path
+            try:
+                response = app.app.test_client().post("/api/games/1/play")
+            finally:
+                app.DB_PATH = original_db_path
+
+        self.assertEqual(response.status_code, 204)
+        startfile.assert_called_once_with(str(exe_path), "runas")
+
 
 if __name__ == "__main__":
     unittest.main()
