@@ -163,5 +163,62 @@ class SteamTrailerAddTests(unittest.TestCase):
             self.assertFalse(app.refresh_steam_microtrailer(db, cursor.lastrowid))
 
 
+class InstallationStatusTests(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.db_path = Path(self.temp_dir.name) / "games.db"
+        db = sqlite3.connect(self.db_path)
+        db.executescript(
+            (Path(app.__file__).parent / "schema.sql").read_text(encoding="utf-8")
+        )
+        db.execute(
+            "INSERT INTO games (title, platform, status) VALUES (?, ?, ?)",
+            ("Uninstalled Test", "steam", "playing"),
+        )
+        db.commit()
+        db.close()
+        self.original_db_path = app.DB_PATH
+        app.DB_PATH = self.db_path
+        self.client = app.app.test_client()
+
+    def tearDown(self):
+        app.DB_PATH = self.original_db_path
+        self.temp_dir.cleanup()
+
+    def test_clearing_last_install_path_moves_playing_game_to_backlog(self):
+        response = self.client.patch("/api/games/1", json={"exe_path": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "backlog")
+
+    def test_update_installed_clears_stale_paths_and_updates_count(self):
+        valid_exe = Path(self.temp_dir.name) / "installed.exe"
+        valid_exe.write_bytes(b"test")
+        db = sqlite3.connect(self.db_path)
+        db.execute(
+            "UPDATE games SET folder_path = ?, exe_path = ? WHERE id = 1",
+            (
+                str(Path(self.temp_dir.name) / "missing"),
+                str(Path(self.temp_dir.name) / "missing.exe"),
+            ),
+        )
+        db.execute(
+            "INSERT INTO games (title, platform, status, exe_path) VALUES (?, ?, ?, ?)",
+            ("Installed Test", "steam", "playing", str(valid_exe)),
+        )
+        db.commit()
+        db.close()
+
+        response = self.client.post("/api/scan/update-installed")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["installed_count"], 1)
+        self.assertEqual(data["installed_by_platform"]["steam"], 1)
+        self.assertEqual(data["installed_by_platform"]["gog"], 0)
+        self.assertEqual(data["cleared_folders"], 1)
+        self.assertEqual(data["cleared_executables"], 1)
+        self.assertEqual(data["moved_to_backlog"], 1)
+        self.assertEqual(data["unavailable_paths"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()

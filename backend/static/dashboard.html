@@ -371,7 +371,7 @@
           <div class="metric-icon">⚙️</div>
           <div class="metric-label">Actually Installed</div>
           <div class="metric-value" id="actuallyInstalled">-</div>
-          <div class="metric-change">executable set</div>
+          <div class="metric-change" id="installedBreakdown">executable set</div>
         </div>
         <div class="metric-card" style="background: linear-gradient(135deg, rgba(200, 150, 100, 0.5), rgba(220, 180, 150, 0.3));">
           <div class="metric-icon">🔍</div>
@@ -474,7 +474,10 @@
 
         <section id="missingFoldersSection" class="list-card">
           <div class="list-title">🔍 Folder Integrity Check</div>
-          <button class="close-btn" id="scanMissingFoldersBtn" style="margin-top: -40px;">Scan for missing folders</button>
+          <div class="integrity-actions">
+            <button class="close-btn" id="scanMissingFoldersBtn">Scan for missing folders</button>
+            <button class="close-btn" id="updateInstalledBtn">Update installed games</button>
+          </div>
           <div id="scanStatus" class="save-hint"></div>
           <div id="scanResults" style="display:none;"></div>
         </section>

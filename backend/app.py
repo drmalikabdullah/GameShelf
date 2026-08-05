@@ -612,6 +612,18 @@ def update_game(game_id):
         if exe_path and "status" not in updates:
             updates["status"] = "playing"
 
+    if (
+        ("folder_path" in updates or "exe_path" in updates)
+        and "status" not in data
+        and row["status"] == "playing"
+    ):
+        effective_folder = updates.get("folder_path", row["folder_path"])
+        effective_exe = updates.get("exe_path", row["exe_path"])
+        folder_exists = bool(effective_folder and Path(effective_folder).is_dir())
+        exe_exists = bool(effective_exe and Path(effective_exe).is_file())
+        if not folder_exists and not exe_exists:
+            updates["status"] = "backlog"
+
     if "case_color_override" in updates:
         color = (updates["case_color_override"] or "").strip()
         if color and not re.match(r"^#[0-9a-fA-F]{6}$", color):
@@ -1290,6 +1302,83 @@ def scan_missing_folders():
     }
 
     return jsonify(summary)
+
+
+@app.route("/api/scan/update-installed", methods=["POST"])
+def update_installed_games():
+    """Remove stale install paths and return a disk-verified installed count."""
+    db = get_db()
+    games = db.execute(
+        "SELECT id, title, platform, folder_path, exe_path, status FROM games ORDER BY title"
+    ).fetchall()
+    updated_games = []
+    cleared_folders = cleared_executables = moved_to_backlog = installed_count = 0
+    installed_by_platform = {platform: 0 for platform in VALID_PLATFORMS}
+    unavailable_paths = 0
+
+    for game in games:
+        folder_path = (game["folder_path"] or "").strip()
+        exe_path = (game["exe_path"] or "").strip()
+        folder_storage_available = bool(
+            not folder_path or not Path(folder_path).anchor
+            or Path(Path(folder_path).anchor).exists()
+        )
+        exe_storage_available = bool(
+            not exe_path or not Path(exe_path).anchor
+            or Path(Path(exe_path).anchor).exists()
+        )
+        folder_exists = bool(folder_path and Path(folder_path).is_dir())
+        exe_exists = bool(exe_path and Path(exe_path).is_file())
+        updates = {}
+        changes = []
+        if folder_path and folder_storage_available and not folder_exists:
+            updates["folder_path"] = None
+            cleared_folders += 1
+            changes.append("missing folder path cleared")
+        elif folder_path and not folder_storage_available:
+            unavailable_paths += 1
+        if exe_path and exe_storage_available and not exe_exists:
+            updates["exe_path"] = None
+            cleared_executables += 1
+            changes.append("missing executable path cleared")
+        elif exe_path and not exe_storage_available:
+            unavailable_paths += 1
+        if exe_exists:
+            installed_count += 1
+            installed_by_platform[game["platform"]] += 1
+        elif (
+            game["platform"] in {"gog", "steam"}
+            and game["status"] == "playing"
+            and exe_storage_available
+        ):
+            updates["status"] = "backlog"
+            moved_to_backlog += 1
+            changes.append("moved from playing to backlog")
+        if updates:
+            set_clause = ", ".join(f"{column} = ?" for column in updates)
+            db.execute(
+                f"UPDATE games SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+                [*updates.values(), game["id"]],
+            )
+            updated_games.append({
+                "id": game["id"], "title": game["title"],
+                "platform": game["platform"], "changes": changes,
+            })
+
+    db.commit()
+    folders_linked = db.execute(
+        "SELECT COUNT(*) c FROM games WHERE folder_path IS NOT NULL AND TRIM(folder_path) != ''"
+    ).fetchone()["c"]
+    return jsonify({
+        "total_games": len(games), "installed_count": installed_count,
+        "installed_by_platform": installed_by_platform,
+        "updated_count": len(updated_games), "cleared_folders": cleared_folders,
+        "cleared_executables": cleared_executables,
+        "unavailable_paths": unavailable_paths,
+        "moved_to_backlog": moved_to_backlog, "folders_linked": folders_linked,
+        "missing_folders": len(games) - folders_linked,
+        "updated_games": updated_games,
+    })
 
 
 @app.route("/api/dashboard/lists")

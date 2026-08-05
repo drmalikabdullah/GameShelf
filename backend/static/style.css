@@ -3345,23 +3345,72 @@ body.gog-shelf-page::before {
 }
 .dashboard-page #toggleOutdatedBtn,
 .dashboard-page #toggleUnverifiedBtn,
-.dashboard-page #scanMissingFoldersBtn {
+.dashboard-page #scanMissingFoldersBtn,
+.dashboard-page #updateInstalledBtn {
   border-color: rgba(67,210,255,0.2);
   background: rgba(67,210,255,0.055);
 }
 .dashboard-page #missingFoldersSection {
   position: relative;
 }
-.dashboard-page #scanMissingFoldersBtn {
+.dashboard-page .integrity-actions {
   position: absolute;
   top: 17px;
   right: 20px;
+  display: flex;
+  gap: 8px;
+}
+.dashboard-page .integrity-actions .close-btn {
   margin: 0 !important;
 }
 .dashboard-page .dash-ok { color: #63e6a3; }
 .dashboard-page .dash-bad { color: #ed6687; }
 .dashboard-page .save-hint {
   color: rgba(255,255,255,0.42);
+}
+.dashboard-page .install-scan-feedback {
+  display: grid;
+  gap: 9px;
+  padding-top: 4px;
+}
+.dashboard-page .install-scan-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #dcefff;
+}
+.dashboard-page .install-scan-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(67,210,255,0.22);
+  border-top-color: #43d2ff;
+  border-radius: 50%;
+  animation: install-scan-spin 0.75s linear infinite;
+}
+.dashboard-page .install-scan-progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+}
+.dashboard-page .install-scan-progress span {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #43d2ff, #7788ff);
+  animation: install-scan-slide 1.25s ease-in-out infinite;
+}
+.dashboard-page .install-scan-elapsed {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+@keyframes install-scan-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes install-scan-slide {
+  from { transform: translateX(-105%); }
+  to { transform: translateX(265%); }
 }
 
 @media (max-width: 1180px) {
@@ -3382,9 +3431,10 @@ body.gog-shelf-page::before {
     grid-template-columns: 1fr;
   }
   .dashboard-page .metric-card { min-height: 128px; }
-  .dashboard-page #scanMissingFoldersBtn {
+  .dashboard-page .integrity-actions {
     position: static;
-    margin: 0 0 12px !important;
+    margin: 0 0 12px;
+    flex-wrap: wrap;
   }
 }
 

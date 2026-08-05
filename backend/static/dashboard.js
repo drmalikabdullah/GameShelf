@@ -50,6 +50,8 @@ async function loadDashboard() {
   document.getElementById('foldersLinked').textContent = o.folders_linked;
   document.getElementById('missingFolders').textContent = o.missing;
   document.getElementById('actuallyInstalled').textContent = d.playable;
+  document.getElementById('installedBreakdown').textContent =
+    `${d.platforms.steam.playable} Steam · ${d.platforms.gog.playable} GOG`;
   document.getElementById('idsVerified').textContent = d.ids_verified;
   document.getElementById('ratedCount').textContent = d.rated_count;
   if (d.avg_rating) {
@@ -392,6 +394,7 @@ async function loadGameLists() {
 
 function loadMissingFolders() {
   const scanBtn = document.getElementById('scanMissingFoldersBtn');
+  const updateBtn = document.getElementById('updateInstalledBtn');
   const statusDiv = document.getElementById('scanStatus');
   const resultsDiv = document.getElementById('scanResults');
 
@@ -436,6 +439,71 @@ function loadMissingFolders() {
       statusDiv.classList.remove('working');
       statusDiv.textContent = `Error scanning folders: ${e.message}`;
       statusDiv.classList.add('dash-bad');
+    }
+  });
+
+  updateBtn.addEventListener('click', async () => {
+    if (!confirm('Check every saved path and clear paths that no longer exist?')) return;
+    updateBtn.disabled = true;
+    updateBtn.textContent = '⏳ Updating…';
+    statusDiv.className = 'save-hint working';
+    statusDiv.innerHTML = `
+      <div class="install-scan-feedback" role="status" aria-live="polite">
+        <div class="install-scan-heading"><span class="install-scan-spinner"></span><span id="installScanMessage">Checking saved game paths</span></div>
+        <div class="install-scan-progress"><span></span></div>
+        <div class="install-scan-elapsed" id="installScanElapsed">Elapsed: 0s</div>
+      </div>`;
+    const startedAt = Date.now();
+    let phase = 0;
+    const phases = [
+      'Checking saved game paths',
+      'Testing folders and executables',
+      'Recalculating installed games',
+    ];
+    const progressTimer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      const elapsedNode = document.getElementById('installScanElapsed');
+      const messageNode = document.getElementById('installScanMessage');
+      if (elapsedNode) elapsedNode.textContent = `Elapsed: ${elapsed}s`;
+      if (messageNode && elapsed > 0 && elapsed % 3 === 0) {
+        phase = (phase + 1) % phases.length;
+        messageNode.textContent = phases[phase];
+      }
+    }, 1000);
+
+    try {
+      const res = await fetch('/api/scan/update-installed', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+
+      document.getElementById('actuallyInstalled').textContent = data.installed_count;
+      document.getElementById('installedBreakdown').textContent =
+        `${data.installed_by_platform.steam || 0} Steam · ${data.installed_by_platform.gog || 0} GOG`;
+      document.getElementById('foldersLinked').textContent = data.folders_linked;
+      document.getElementById('missingFolders').textContent = data.missing_folders;
+      statusDiv.className = 'save-hint dash-ok';
+      statusDiv.textContent = `✓ ${data.installed_count} games installed (${data.installed_by_platform.steam || 0} Steam · ${data.installed_by_platform.gog || 0} GOG); ${data.updated_count} records updated, ${data.moved_to_backlog} moved to backlog.${data.unavailable_paths ? ` ${data.unavailable_paths} paths skipped because their drive is unavailable.` : ''}`;
+
+      const rows = data.updated_games.map(game => `
+        <div class="list-row">
+          <div style="flex:1;">
+            <div style="font-weight:500;">${escapeHtml(game.title)}</div>
+            <div style="font-size:12px;color:var(--muted);">${game.changes.map(escapeHtml).join(' · ')}</div>
+          </div>
+          <span style="font-size:12px;color:#64c8ff;">${PLATFORM_LABEL[game.platform]}</span>
+        </div>
+      `).join('');
+      resultsDiv.innerHTML = rows
+        ? `<div style="margin-top:16px;">${rows}</div>`
+        : '<div class="save-hint" style="margin-top:16px;">No stale paths found.</div>';
+      resultsDiv.style.display = '';
+    } catch (e) {
+      statusDiv.className = 'save-hint dash-bad';
+      statusDiv.textContent = `Error updating installed games: ${e.message}`;
+    } finally {
+      clearInterval(progressTimer);
+      updateBtn.disabled = false;
+      updateBtn.textContent = 'Update installed games';
     }
   });
 }
