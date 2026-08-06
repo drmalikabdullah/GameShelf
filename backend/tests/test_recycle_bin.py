@@ -248,6 +248,32 @@ class InstallationStatusTests(unittest.TestCase):
         db.close()
         self.assertEqual(stored_size, 15)
 
+    def test_nsfw_category_filters_by_tag(self):
+        db = sqlite3.connect(self.db_path)
+        db.execute("UPDATE games SET tags = ? WHERE id = 1", ("action, NSFW",))
+        db.execute(
+            "INSERT INTO games (title, platform, tags) VALUES (?, ?, ?)",
+            ("Family Test", "steam", "action, coop"),
+        )
+        db.commit()
+        db.close()
+
+        response = self.client.get("/api/games?platform=steam&status=nsfw")
+        self.assertEqual(response.status_code, 200)
+        games = response.get_json()
+        self.assertEqual([game["title"] for game in games], ["Uninstalled Test"])
+
+        response = self.client.get("/api/games?platform=steam&sort=nsfw")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [game["title"] for game in response.get_json()], ["Uninstalled Test"]
+        )
+
+    def test_abandoned_status_is_rejected(self):
+        response = self.client.patch("/api/games/1", json={"status": "abandoned"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("status must be one of", response.get_json()["error"])
+
 
 class ElevatedLaunchTests(unittest.TestCase):
     @mock.patch("app.os.startfile")

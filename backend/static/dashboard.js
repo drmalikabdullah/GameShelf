@@ -1,7 +1,7 @@
 const PLATFORM_LABEL = { gog: 'GOG', steam: 'Steam', ps3: 'PS3', ps4: 'PS4' };
 const PLATFORM_COLORS = { gog: '#f0a24a', steam: '#43d2ff', ps3: '#7788ff', ps4: '#ed3f9e' };
-const STATUS_ORDER = ['backlog', 'playing', 'completed', 'abandoned'];
-const STATUS_COLORS = { backlog: '#929bad', playing: '#43d2ff', completed: '#63e6a3', abandoned: '#ed6687' };
+const STATUS_ORDER = ['backlog', 'playing', 'completed'];
+const STATUS_COLORS = { backlog: '#929bad', playing: '#43d2ff', completed: '#63e6a3' };
 
 let charts = {};
 
@@ -92,9 +92,9 @@ function initStatusChart(byStatus) {
   charts.status = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Backlog', 'Playing', 'Completed', 'Abandoned'],
+      labels: ['Backlog', 'Playing', 'Completed'],
       datasets: [{
-        data: [byStatus.backlog, byStatus.playing, byStatus.completed, byStatus.abandoned],
+        data: [byStatus.backlog, byStatus.playing, byStatus.completed],
         backgroundColor: STATUS_ORDER.map(s => STATUS_COLORS[s]),
         borderColor: 'transparent',
       }]

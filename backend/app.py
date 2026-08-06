@@ -139,6 +139,10 @@ ensure_columns(_migration_db, "deleted_games", {
     "system_requirements": "TEXT",
     "trailer_url": "TEXT",
 })
+# Abandoned is no longer a library category. Preserve those games by moving
+# them back to the backlog, including records currently in the recycle bin.
+_migration_db.execute("UPDATE games SET status = 'backlog' WHERE status = 'abandoned'")
+_migration_db.execute("UPDATE deleted_games SET status = 'backlog' WHERE status = 'abandoned'")
 _migration_db.commit()
 _migration_db.close()
 
@@ -549,7 +553,9 @@ def list_games():
     if platform != "all":
         sql += " AND platform = ?"
         params.append(platform)
-    if status and status != "all":
+    if status == "nsfw":
+        sql += " AND instr(',' || lower(replace(COALESCE(tags, ''), ' ', '')) || ',', ',nsfw,') > 0"
+    elif status and status != "all":
         sql += " AND status = ?"
         params.append(status)
     if tag:
@@ -557,6 +563,8 @@ def list_games():
         params.append(f"%,{tag},%")
     if sort == "missing":
         sql += " AND (folder_path IS NULL OR folder_path = '')"
+    elif sort == "nsfw":
+        sql += " AND instr(',' || lower(replace(COALESCE(tags, ''), ' ', '')) || ',', ',nsfw,') > 0"
 
     sort_columns = {
         "title": "title COLLATE NOCASE ASC",
@@ -564,6 +572,7 @@ def list_games():
         "rating": "rating DESC",
         "added": "added_at DESC",
         "missing": "title COLLATE NOCASE ASC",
+        "nsfw": "title COLLATE NOCASE ASC",
     }
     sql += " ORDER BY " + sort_columns.get(sort, sort_columns["title"])
 
@@ -633,7 +642,7 @@ def update_game(game_id):
     if not updates:
         return jsonify({"error": "no valid fields"}), 400
 
-    valid_statuses = {"backlog", "playing", "completed", "abandoned"}
+    valid_statuses = {"backlog", "playing", "completed"}
     if "status" in updates and updates["status"] not in valid_statuses:
         return jsonify({"error": f"status must be one of {sorted(valid_statuses)}"}), 400
     if "rating" in updates and updates["rating"] is not None:
@@ -1183,7 +1192,7 @@ def monitor_stats():
 
     # By status
     by_status = {}
-    for status in ['backlog', 'playing', 'completed', 'abandoned']:
+    for status in ['backlog', 'playing', 'completed']:
         count = db.execute("SELECT COUNT(*) c FROM games WHERE status = ?", (status,)).fetchone()["c"]
         by_status[status] = count
 

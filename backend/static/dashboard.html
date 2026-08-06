@@ -226,7 +226,6 @@
   .seg-backlog { background: #ff9500; }
   .seg-playing { background: #64ff64; }
   .seg-completed { background: #1b9fff; }
-  .seg-abandoned { background: #666; }
 
   .status-legend {
     display: flex;
@@ -236,7 +235,7 @@
     margin-bottom: 12px;
   }
 
-  .leg-backlog::before, .leg-playing::before, .leg-completed::before, .leg-abandoned::before {
+  .leg-backlog::before, .leg-playing::before, .leg-completed::before {
     content: '■ ';
     margin-right: 4px;
   }
@@ -244,7 +243,6 @@
   .leg-backlog::before { color: #ff9500; }
   .leg-playing::before { color: #64ff64; }
   .leg-completed::before { color: #1b9fff; }
-  .leg-abandoned::before { color: #666; }
 
   .platform-meta {
     display: flex;

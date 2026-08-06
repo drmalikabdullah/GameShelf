@@ -37,7 +37,6 @@
           <div class="tab" data-status="backlog">Backlog</div>
           <div class="tab" data-status="playing">Playing</div>
           <div class="tab" data-status="completed">Completed</div>
-          <div class="tab" data-status="abandoned">Abandoned</div>
         </div>
         <select id="sort">
           <option value="title">Sort: Title</option>
@@ -45,6 +44,7 @@
           <option value="rating">Sort: Rating</option>
           <option value="added">Sort: Recently Added</option>
           <option value="missing">Missing Folder Only</option>
+          <option value="nsfw">NSFW Only</option>
         </select>
         <button class="close-btn" id="addGameBtn">+ Add Game</button>
         <button class="close-btn" id="trashBtn">🗑 Trash</button>
@@ -68,11 +68,10 @@
   <button class="bp-exit-btn" id="bpExitBtn" title="Exit Big Picture">✕ Exit</button>
   <div class="bp-filters tabs" id="bpFilters">
     <div class="tab active" data-bpfilter="all">All</div>
-    <div class="tab" data-bpfilter="installed">Installed</div>
     <div class="tab" data-bpfilter="backlog">Backlog</div>
     <div class="tab" data-bpfilter="playing">Playing</div>
     <div class="tab" data-bpfilter="completed">Completed</div>
-    <div class="tab" data-bpfilter="abandoned">Abandoned</div>
+    <div class="tab" data-bpfilter="nsfw">NSFW</div>
   </div>
   <input type="search" id="bpSearch" class="bp-search" placeholder="Search games..." autocomplete="off">
   <div class="bp-backdrop" id="bpBackdropA"></div>

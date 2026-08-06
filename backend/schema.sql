@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS games (
     exe_path      TEXT,                      -- path to the game's launch executable; lets the
                                               -- Play button start it directly (gog/steam only)
     raw_paths     TEXT,                      -- JSON array of original folder/file names
-    status        TEXT DEFAULT 'backlog',    -- backlog | playing | completed | abandoned
+    status        TEXT DEFAULT 'backlog',    -- backlog | playing | completed
     rating        INTEGER,                   -- 1-10, nullable
     notes         TEXT,
     tags          TEXT,                      -- comma-separated, user-defined

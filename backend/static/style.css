@@ -472,7 +472,6 @@ main {
 .status-pill.backlog { background: rgba(91,95,115,0.25); color: #a9adc0; }
 .status-pill.playing { background: rgba(74,154,160,0.2); color: var(--teal); }
 .status-pill.completed { background: rgba(90,169,104,0.2); color: var(--green); }
-.status-pill.abandoned { background: rgba(168,90,90,0.2); color: var(--red); }
 
 .stars { color: var(--gold); font-size: 12px; letter-spacing: 1px; }
 
@@ -925,6 +924,20 @@ main {
   text-transform: none;
   letter-spacing: 0;
 }
+.game-detail-modal .field label.nsfw-tag-control {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 39px;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.nsfw-tag-control input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--red);
+}
 .game-detail-modal .field select,
 .game-detail-modal .field textarea,
 .game-detail-modal .field input[type="text"] {
@@ -1234,7 +1247,6 @@ a.close-btn { display: inline-block; text-decoration: none; }
 .status-bar .seg-backlog { background: var(--grey); }
 .status-bar .seg-playing { background: var(--teal); }
 .status-bar .seg-completed { background: var(--green); }
-.status-bar .seg-abandoned { background: var(--red); }
 
 .status-legend {
   display: flex;
@@ -1256,7 +1268,6 @@ a.close-btn { display: inline-block; text-decoration: none; }
 .status-legend .leg-backlog::before { background: var(--grey); }
 .status-legend .leg-playing::before { background: var(--teal); }
 .status-legend .leg-completed::before { background: var(--green); }
-.status-legend .leg-abandoned::before { background: var(--red); }
 
 .build-bar {
   display: flex;
@@ -2063,8 +2074,8 @@ a.close-btn { display: inline-block; text-decoration: none; }
   aspect-ratio: 2 / 3;
   border: 2px solid color-mix(in srgb, var(--case-color) 65%, rgba(255,255,255,0.2));
   border-radius: 11px;
-  opacity: calc(0.88 - var(--deck-depth) * 0.14);
-  filter: brightness(calc(0.88 - var(--deck-depth) * 0.08)) saturate(calc(0.92 - var(--deck-depth) * 0.07));
+  opacity: 1;
+  filter: none;
   transform:
     translate(-50%, -50%)
     translateX(var(--deck-x))
@@ -3281,7 +3292,6 @@ body.gog-shelf-page::before {
 .dashboard-page .seg-backlog { background: #929bad; }
 .dashboard-page .seg-playing { background: #43d2ff; }
 .dashboard-page .seg-completed { background: #63e6a3; }
-.dashboard-page .seg-abandoned { background: #ed6687; }
 .dashboard-page .status-legend {
   gap: 10px;
   color: rgba(255,255,255,0.43);

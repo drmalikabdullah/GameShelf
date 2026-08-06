@@ -300,7 +300,7 @@ function openModal(idOrGame) {
           <div class="field">
             <label>Status</label>
             <select id="f-status">
-              ${['backlog','playing','completed','abandoned'].map(s =>
+              ${['backlog','playing','completed'].map(s =>
                 `<option value="${s}" ${g.status===s?'selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}
             </select>
           </div>
@@ -322,6 +322,12 @@ function openModal(idOrGame) {
           <div class="field">
             <label>Tags <span>(comma-separated)</span></label>
             <input type="text" id="f-tags" value="${escapeHtml(g.tags || '')}" placeholder="rpg, coop, favorite...">
+          </div>
+          <div class="field">
+            <label class="nsfw-tag-control">
+              <input type="checkbox" id="f-nsfw" ${(g.tags_list || []).some(tag => tag.toLowerCase() === 'nsfw') ? 'checked' : ''}>
+              Mark this game as NSFW
+            </label>
           </div>
           <div class="field">
             <label>Notes</label>
@@ -446,6 +452,14 @@ function openModal(idOrGame) {
 
   document.getElementById('f-status').addEventListener('change', e => saveField('status', e.target.value));
   document.getElementById('f-tags').addEventListener('blur', e => saveField('tags', e.target.value));
+  document.getElementById('f-nsfw').addEventListener('change', async e => {
+    const tagsInput = document.getElementById('f-tags');
+    const tags = tagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean);
+    const withoutNsfw = tags.filter(tag => tag.toLowerCase() !== 'nsfw');
+    if (e.target.checked) withoutNsfw.push('NSFW');
+    tagsInput.value = withoutNsfw.join(', ');
+    await saveField('tags', tagsInput.value, 'updating NSFW category…');
+  });
   document.getElementById('f-notes').addEventListener('blur', e => saveField('notes', e.target.value));
 
   document.getElementById('overlay').classList.add('open');
@@ -862,7 +876,8 @@ const bp = { games: [], allGames: [], filter: 'all', index: 0, gamepadLoop: null
 
 function bpApplyFilter() {
   let filtered = bp.filter === 'all' ? bp.allGames
-    : bp.filter === 'installed' ? bp.allGames.filter(g => !!g.folder_path)
+    : bp.filter === 'nsfw' ? bp.allGames.filter(g =>
+        (g.tags_list || []).some(tag => tag.toLowerCase() === 'nsfw'))
     : bp.allGames.filter(g => g.status === bp.filter);
 
   // Apply search filter
